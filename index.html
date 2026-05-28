@@ -621,15 +621,19 @@
           parts.find((p) => p.type === "day").value;
       }
 
-      async function createReservationNo(client) {
+      async function createReservationNo(client, options) {
+        options = options || {};
         const dayKey = getJstDayKey();
-        if (client) {
+        if (!options.forceRandom && client) {
           try {
             const { data, error } = await client
               .from("reservations")
               .select("reservation_no")
               .like("reservation_no", dayKey + "-%");
             if (!error && data) {
+              if (data.length === 0) {
+                return dayKey + "-001";
+              }
               let max = 0;
               for (const row of data) {
                 const seq = parseInt(String(row.reservation_no || "").split("-")[1], 10);
@@ -641,12 +645,15 @@
             console.warn("[reserve] reservation_no lookup failed", err);
           }
         }
-        return dayKey + "-" + String(Date.now() % 1000).padStart(3, "0");
+        const rand = Math.floor(Math.random() * 900) + 100;
+        return dayKey + "-" + String(rand).padStart(3, "0");
       }
 
       async function insertReservation(client, payload) {
         for (let attempt = 0; attempt < 3; attempt++) {
-          const reservationNo = await createReservationNo(client);
+          const reservationNo = await createReservationNo(client, {
+            forceRandom: attempt > 0,
+          });
           const { data, error } = await client
             .from("reservations")
             .insert({ ...payload, reservation_no: reservationNo })
