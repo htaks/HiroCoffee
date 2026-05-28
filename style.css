@@ -158,10 +158,49 @@ h1, h2, .hero h1, .card h2 {
 @media (max-width: 480px) {
   .hero-top {
     position: static;
-    margin-bottom: 8px;
+    margin-bottom: 0;
+    grid-area: logo;
+    align-self: center;
   }
-  .brand-logo { height: 110px; }
-  .hero { padding-right: 20px; }
+  .brand-logo { height: 68px; }
+  .hero {
+    padding-right: 12px;
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    grid-template-areas:
+      "logo title"
+      "actions actions";
+    column-gap: 10px;
+    row-gap: 10px;
+    align-items: center;
+  }
+  .hero h1 {
+    grid-area: title;
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.35;
+  }
+  .hero .lead { display: none; }
+  .hero .actions {
+    grid-area: actions;
+    grid-column: 1 / -1;
+    margin-top: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 6px;
+    padding-bottom: 2px;
+  }
+  .hero .actions::-webkit-scrollbar { display: none; }
+  .hero .actions .btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    min-width: 0;
+    padding: 8px 12px;
+    font-size: 13px;
+    min-height: 40px;
+  }
 }
 
 .badge {
@@ -1204,17 +1243,17 @@ input:focus, select:focus, textarea:focus {
 
 @media (max-width: 480px) {
   body {
-    padding-top: max(20px, env(safe-area-inset-top));
+    padding-top: max(12px, env(safe-area-inset-top));
     padding-left: max(12px, env(safe-area-inset-left));
     padding-right: max(12px, env(safe-area-inset-right));
     padding-bottom: max(72px, calc(env(safe-area-inset-bottom) + 56px));
   }
 
-  .wrap { gap: 14px; }
-  .main-grid { gap: 12px; }
+  .wrap { gap: 10px; }
+  .main-grid { gap: 10px; }
 
   .hero {
-    padding: 14px 16px 16px;
+    padding: 10px 12px 12px;
     border-radius: var(--radius);
   }
 
@@ -1222,9 +1261,7 @@ input:focus, select:focus, textarea:focus {
     border-radius: 14px;
   }
 
-  .card h2 { font-size: 18px; margin-bottom: 14px; }
-
-  .lead { line-height: 1.7; }
+  .card h2 { font-size: 18px; margin-bottom: 12px; }
 
   .actions {
     gap: 8px;
@@ -1264,9 +1301,10 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (max-width: 360px) {
-  .actions .btn { flex-basis: 100%; }
-  .brand-logo { height: 96px; }
-  .hero h1 { letter-spacing: 0; }
+  .hero .actions .btn { flex-basis: auto; }
+  .brand-logo { height: 56px; }
+  .hero { grid-template-columns: 60px 1fr; }
+  .hero h1 { font-size: 15px; letter-spacing: 0; }
 }
 
 @media (hover: none) {
