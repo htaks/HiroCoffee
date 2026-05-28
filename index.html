@@ -682,10 +682,10 @@
             const row = await demoStore.insert(reservation);
             noteEl.textContent = "（デモモード）ご予約を受け付けました。";
             showReservationSuccess(row.reservation_no);
-            removeLineStore(LINE_USER_KEY);
             updateLineLinkUi();
             form.reset();
             setDefaultPickupTime(form);
+            applyLineNameToForm(form, loadLinkedLineUser());
             return;
           }
 
@@ -698,10 +698,10 @@
           } else {
             noteEl.textContent = "ご予約ありがとうございます。";
             showReservationSuccess(data && data.reservation_no);
-            removeLineStore(LINE_USER_KEY);
             updateLineLinkUi();
             form.reset();
             setDefaultPickupTime(form);
+            applyLineNameToForm(form, loadLinkedLineUser());
           }
         } catch (err) {
           console.error(err);

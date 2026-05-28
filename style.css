@@ -426,6 +426,10 @@ h2 {
   box-shadow: 0 6px 14px rgba(63, 47, 30, 0.08);
 }
 
+.btn-line[hidden] {
+  display: none !important;
+}
+
 .btn-line::before {
   content: "";
   display: inline-block;
