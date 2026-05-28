@@ -6,6 +6,34 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const MENU_PRICES: Record<string, number> = {
+  "カフェラテ": 520,
+  "カプチーノ": 560,
+  "エチオピア（浅煎り）": 480,
+  "アイス・コーヒー（浅煎り）": 500,
+  "アールグレイ": 490,
+  "チャイ": 540,
+  "チャイティーラテ": 620,
+  "バスクチーズケーキ": 680,
+  "シナモンロール": 620,
+  "季節のパウンド": 580,
+};
+
+const BAG_FEE = 10;
+
+function calcTotalAmount(item: string, wantsBag: boolean) {
+  const names = String(item || "")
+    .split("、")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  let total = 0;
+  for (const name of names) {
+    total += MENU_PRICES[name] || 0;
+  }
+  if (wantsBag) total += BAG_FEE;
+  return total;
+}
+
 function getJstDayKey() {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "Asia/Tokyo",
@@ -69,6 +97,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    const totalAmount = calcTotalAmount(item, wantsBag);
+
     let reservationNo = "";
     let lastError: unknown = null;
 
@@ -82,11 +112,12 @@ Deno.serve(async (req) => {
           time,
           note,
           wants_bag: wantsBag,
+          total_amount: totalAmount,
           status: "pending",
           line_user_id: lineUserId || null,
           reservation_no: reservationNo,
         })
-        .select("id, reservation_no")
+        .select("id, reservation_no, total_amount")
         .single();
 
       if (!error) {

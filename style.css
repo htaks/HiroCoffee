@@ -1405,6 +1405,14 @@ input:focus, select:focus, textarea:focus {
   font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
 }
 
+.reservation-success__total {
+  margin: 10px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.04em;
+}
+
 .reservation-success__hint {
   margin: 10px 0 0;
   font-size: 13px;

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
+  <script src="menu-prices.js"></script>
   <script src="demo-store.js"></script>
   <style>
     .admin-header {
@@ -143,6 +144,11 @@
       letter-spacing: 0.1em;
       color: #78350f;
       font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    }
+    .res-total {
+      font-size: 17px;
+      font-weight: 800;
+      color: #78350f;
     }
 
     .res-actions {
@@ -530,6 +536,21 @@
         .join("<br>");
     }
 
+    function getReservationTotal(r) {
+      if (r.total_amount != null && r.total_amount !== "") {
+        return Number(r.total_amount);
+      }
+      const mp = window.HIRO_MENU_PRICES;
+      if (mp) return mp.calcTotalFromItemString(r.item, r.wants_bag);
+      return 0;
+    }
+
+    function formatReservationTotal(r) {
+      const mp = window.HIRO_MENU_PRICES;
+      const amount = getReservationTotal(r);
+      return mp ? mp.formatYen(amount) : "¥" + amount;
+    }
+
     function render() {
       const list = allReservations.filter(
         (r) => currentFilter === "all" || r.status === currentFilter
@@ -555,7 +576,7 @@
         const toggleAction = isDone ? "pending" : "done";
         const hasLine = !!r.line_user_id;
         const bagBadge = r.wants_bag
-          ? '<span class="bag-badge">手さげ袋希望</span>'
+          ? '<span class="bag-badge">手さげ袋希望（10円）</span>'
           : "";
         const lineBadge = hasLine
           ? (r.line_notified_at
@@ -584,8 +605,9 @@
                 ? '<dt>予約番号</dt><dd><strong class="res-no">' + escapeHtml(r.reservation_no) + '</strong></dd>'
                 : '') +
               '<dt>メニュー</dt><dd>' + formatMenuItems(r.item) + '</dd>' +
+              '<dt>合計金額</dt><dd><strong class="res-total">' + escapeHtml(formatReservationTotal(r)) + '</strong></dd>' +
               '<dt>受取時間</dt><dd>' + escapeHtml(r.time) + '</dd>' +
-              '<dt>手さげ袋希望</dt><dd>' + (r.wants_bag ? '<strong>あり</strong>' : 'なし') + '</dd>' +
+              '<dt>手さげ袋希望（10円）</dt><dd>' + (r.wants_bag ? '<strong>あり</strong>' : 'なし') + '</dd>' +
               '<dt>追加要望</dt><dd>' + (r.note ? escapeHtml(r.note) : "（なし）") + '</dd>' +
             '</dl>' +
             '<div class="res-actions">' +

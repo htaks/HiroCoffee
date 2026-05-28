@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
+  <script src="menu-prices.js"></script>
   <script src="demo-store.js"></script>
 </head>
 <body>
@@ -130,7 +131,7 @@
         <div class="line-link-box" id="lineLinkBox">
           <button type="button" class="btn btn-line" id="lineLoginBtn">LINEと連携する（通知用）</button>
           <a class="btn btn-line line-add-btn" id="lineAddBtn" href="#" target="_blank" rel="noopener noreferrer">Hiro Coffee を友だち追加</a>
-          <p class="line-link-note">連携のあと「友だち追加」をタップしてください。準備完了の通知は公式アカウントから届きます。</p>
+          <p class="line-link-note">ログイン後の「友だち追加」画面を必ずタップしてください。通知は公式アカウントから届きます。</p>
           <div id="lineLinkStatus" class="line-link-status" role="status" aria-live="polite">
             <span class="line-link-status__icon" aria-hidden="true"></span>
             <p id="lineLinkStatusText" class="line-link-status__text"></p>
@@ -245,7 +246,7 @@
           <div class="field-bag-option">
             <label class="field-checkbox" for="wantsBagInput">
               <input type="checkbox" name="wants_bag" id="wantsBagInput" value="1">
-              <span>手さげ袋希望</span>
+              <span>手さげ袋希望（10円）</span>
             </label>
           </div>
 
@@ -262,6 +263,7 @@
           <div id="reservationSuccess" class="reservation-success" hidden>
             <p class="reservation-success__label">ご予約番号</p>
             <p class="reservation-success__no" id="reservationNoDisplay"></p>
+            <p class="reservation-success__total" id="reservationTotalDisplay"></p>
             <p class="reservation-success__hint">準備ができ次第、LINE でお知らせします。</p>
           </div>
         </form>
@@ -569,6 +571,8 @@
       const menuPickerField = document.getElementById("menuPickerField");
       const reservationSuccessEl = document.getElementById("reservationSuccess");
       const reservationNoDisplayEl = document.getElementById("reservationNoDisplay");
+      const reservationTotalDisplayEl = document.getElementById("reservationTotalDisplay");
+      const menuPrices = window.HIRO_MENU_PRICES;
       setDefaultPickupTime(form);
 
       form.querySelectorAll('input[name="item"]').forEach((input) => {
@@ -587,14 +591,19 @@
       function hideReservationSuccess() {
         if (reservationSuccessEl) reservationSuccessEl.hidden = true;
         if (reservationNoDisplayEl) reservationNoDisplayEl.textContent = "";
+        if (reservationTotalDisplayEl) reservationTotalDisplayEl.textContent = "";
       }
 
-      function showReservationSuccess(reservationNo) {
+      function showReservationSuccess(reservationNo, totalAmount) {
         if (!reservationNo) {
           hideReservationSuccess();
           return;
         }
         if (reservationNoDisplayEl) reservationNoDisplayEl.textContent = reservationNo;
+        if (reservationTotalDisplayEl && menuPrices) {
+          reservationTotalDisplayEl.textContent =
+            "合計金額 " + menuPrices.formatYen(totalAmount);
+        }
         if (reservationSuccessEl) reservationSuccessEl.hidden = false;
       }
 
@@ -721,6 +730,11 @@
         if (lineLinkBox) lineLinkBox.classList.toggle("line-link-box--linked", !!isLinked);
       }
 
+      function needsLineFriendAdd(user) {
+        if (!user) return true;
+        return user.is_friend !== true;
+      }
+
       function setLineFriendAddVisible(show) {
         if (lineAddBtn) lineAddBtn.hidden = !show;
         if (lineLinkNote) lineLinkNote.hidden = !show;
@@ -742,18 +756,27 @@
 
         if (linkedLineUser) {
           lineLoginBtn.hidden = true;
-          setLineFriendAddVisible(false);
-          setLineLinkMessage(
-            "LINE連携済み：" + (linkedLineUser.display_name || "ユーザー") +
-            " さん。準備完了の通知はLINEでお知らせします。",
-            true
-          );
+          const missingFriend = needsLineFriendAdd(linkedLineUser);
+          setLineFriendAddVisible(missingFriend);
+          if (missingFriend) {
+            setLineLinkMessage(
+              "LINE連携済み：" + (linkedLineUser.display_name || "ユーザー") +
+              " さん。友だち一覧に Hiro Coffee がありません。下のボタンから友だち追加してください（通知に必要です）。",
+              true
+            );
+          } else {
+            setLineLinkMessage(
+              "LINE連携済み：" + (linkedLineUser.display_name || "ユーザー") +
+              " さん。Hiro Coffee 公式アカウントと友だち連携済みです。",
+              true
+            );
+          }
           applyLineNameToForm(form, linkedLineUser);
         } else {
           lineLoginBtn.hidden = false;
           setLineFriendAddVisible(true);
           setLineLinkMessage(
-            "LINEでログインし、Hiro Coffee を友だち追加してください。",
+            "LINEでログインし、表示された「友だち追加」もタップしてください。",
             false
           );
         }
@@ -791,15 +814,25 @@
 
       updateLineLinkUi();
 
-      if (location.hash === "#line-linked") {
-        applyLineNameToForm(form, loadLinkedLineUser(), { force: true });
-        setLineLinkMessage(
-          "LINE連携済み：" + ((loadLinkedLineUser() || {}).display_name || "ユーザー") +
-          " さん。準備完了の通知はLINEでお知らせします。",
-          true
-        );
+      if (location.hash === "#line-linked" || location.hash === "#line-linked-no-friend") {
+        const linkedUser = loadLinkedLineUser();
+        applyLineNameToForm(form, linkedUser, { force: true });
+        if (needsLineFriendAdd(linkedUser)) {
+          setLineLinkMessage(
+            "LINE連携済み：" + ((linkedUser || {}).display_name || "ユーザー") +
+            " さん。友だち一覧に Hiro Coffee がありません。下のボタンから友だち追加してください。",
+            true
+          );
+          setLineFriendAddVisible(true);
+        } else {
+          setLineLinkMessage(
+            "LINE連携済み：" + ((linkedUser || {}).display_name || "ユーザー") +
+            " さん。Hiro Coffee 公式アカウントと友だち連携済みです。",
+            true
+          );
+          setLineFriendAddVisible(false);
+        }
         if (lineLoginBtn) lineLoginBtn.hidden = true;
-        setLineFriendAddVisible(false);
         history.replaceState(null, "", location.pathname + location.search + "#reserve");
       } else if (location.hash === "#line-error") {
         setLineLinkMessage(
@@ -854,6 +887,7 @@
           time: payload.time,
           note: payload.note,
           wants_bag: !!payload.wants_bag,
+          total_amount: payload.total_amount,
           line_user_id: payload.line_user_id || "",
         };
 
@@ -897,6 +931,9 @@
           time: String(fd.get("time") || "").trim(),
           note: String(fd.get("note") || "").trim(),
           wants_bag: fd.get("wants_bag") === "1",
+          total_amount: menuPrices
+            ? menuPrices.calcTotalFromItems(selectedItems, fd.get("wants_bag") === "1")
+            : 0,
           status: "pending",
         };
 
@@ -928,7 +965,7 @@
             }
             const row = await demoStore.insert(reservation);
             noteEl.textContent = "（デモモード）ご予約を受け付けました。";
-            showReservationSuccess(row.reservation_no);
+            showReservationSuccess(row.reservation_no, row.total_amount);
             updateLineLinkUi();
             form.reset();
             setDefaultPickupTime(form);
@@ -944,7 +981,10 @@
               "送信に失敗しました：" + (error.message || "もう一度お試しください。");
           } else {
             noteEl.textContent = "ご予約ありがとうございます。";
-            showReservationSuccess(data && data.reservation_no);
+            const totalAmount = data && data.total_amount != null
+              ? data.total_amount
+              : reservation.total_amount;
+            showReservationSuccess(data && data.reservation_no, totalAmount);
             updateLineLinkUi();
             form.reset();
             setDefaultPickupTime(form);

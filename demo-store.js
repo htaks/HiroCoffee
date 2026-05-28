@@ -117,6 +117,11 @@
       time: String(record.time || ""),
       note: String(record.note || ""),
       wants_bag: !!record.wants_bag,
+      total_amount: record.total_amount != null
+        ? Number(record.total_amount)
+        : (window.HIRO_MENU_PRICES
+          ? window.HIRO_MENU_PRICES.calcTotalFromItemString(record.item, !!record.wants_bag)
+          : 0),
       line_user_id: record.line_user_id ? String(record.line_user_id) : "",
       line_notified_at: record.line_notified_at || null,
     };

@@ -87,8 +87,9 @@
         setLineStore(LINE_USER_KEY, JSON.stringify({
           line_user_id: data.line_user_id,
           display_name: data.display_name || "",
+          is_friend: !!data.is_friend,
         }));
-        goBack("index.html#line-linked");
+        goBack(data.is_friend ? "index.html#line-linked" : "index.html#line-linked-no-friend");
       } catch (err) {
         console.error(err);
         if (statusEl) {

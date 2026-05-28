@@ -83,6 +83,17 @@ Deno.serve(async (req) => {
       }
     }
 
+    let isFriend = false;
+    if (tokenData.access_token) {
+      const friendshipRes = await fetch("https://api.line.me/friendship/v1/status", {
+        headers: { Authorization: "Bearer " + tokenData.access_token },
+      });
+      const friendship = await friendshipRes.json();
+      if (friendshipRes.ok) {
+        isFriend = !!friendship.friendFlag;
+      }
+    }
+
     if (!lineUserId) {
       return new Response(
         JSON.stringify({ error: "LINE ユーザー ID を取得できませんでした" }),
@@ -94,6 +105,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         line_user_id: lineUserId,
         display_name: displayName,
+        is_friend: isFriend,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json; charset=utf-8" } },
     );
