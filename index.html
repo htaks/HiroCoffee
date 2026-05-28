@@ -126,7 +126,10 @@
 
         <div class="line-link-box" id="lineLinkBox">
           <button type="button" class="btn btn-line" id="lineLoginBtn">LINEと連携する（通知用）</button>
-          <p id="lineLinkStatus" class="note line-link-status" role="status" aria-live="polite"></p>
+          <div id="lineLinkStatus" class="line-link-status" role="status" aria-live="polite">
+            <span class="line-link-status__icon" aria-hidden="true"></span>
+            <p id="lineLinkStatusText" class="line-link-status__text"></p>
+          </div>
         </div>
 
         <form id="reserveForm" class="form" autocomplete="on">
@@ -135,18 +138,83 @@
             <input name="name" type="text" required maxlength="20" placeholder="例：コーヒー太郎" autocomplete="name" autocapitalize="words" enterkeyhint="next">
           </label>
 
-          <label class="field">
-            <span>希望メニュー</span>
-            <select name="item" required>
-              <option value="" selected disabled hidden>メニューを選んでください</option>
-              <option value="カフェラテ">カフェラテ</option>
-              <option value="カプチーノ">カプチーノ</option>
-              <option value="アールグレイ">アールグレイ</option>
-              <option value="チャイ">チャイ</option>
-              <option value="チャイティーラテ">チャイティーラテ</option>
-              <option value="バスクチーズケーキ">バスクチーズケーキ</option>
-            </select>
-          </label>
+          <fieldset class="field menu-picker-field" id="menuPickerField">
+            <legend class="menu-picker-legend">
+              希望メニュー <span class="menu-picker-legend-note">（複数選択可）</span>
+            </legend>
+            <div class="menu-picker">
+              <label class="menu-picker-item">
+                <input type="checkbox" name="item" value="カフェラテ">
+                <span class="menu-picker-face">
+                  <img src="images/menu_coffee.png" alt="" width="44" height="44" loading="lazy">
+                  <span class="menu-picker-label">カフェラテ</span>
+                </span>
+              </label>
+              <label class="menu-picker-item">
+                <input type="checkbox" name="item" value="カプチーノ">
+                <span class="menu-picker-face">
+                  <img src="images/menu_cappuccino.png" alt="" width="44" height="44" loading="lazy">
+                  <span class="menu-picker-label">カプチーノ</span>
+                </span>
+              </label>
+              <label class="menu-picker-item">
+                <input type="checkbox" name="item" value="エチオピア（浅煎り）">
+                <span class="menu-picker-face">
+                  <img src="images/menu_ethiopia.png" alt="" width="44" height="44" loading="lazy">
+                  <span class="menu-picker-label">エチオピア（浅煎り）</span>
+                </span>
+              </label>
+              <label class="menu-picker-item">
+                <input type="checkbox" name="item" value="アールグレイ">
+                <span class="menu-picker-face">
+                  <img src="images/menu_tea.png" alt="" width="44" height="44" loading="lazy">
+                  <span class="menu-picker-label">アールグレイ</span>
+                </span>
+              </label>
+              <label class="menu-picker-item">
+                <input type="checkbox" name="item" value="チャイ">
+                <span class="menu-picker-face">
+                  <img src="images/menu_chai_hot.png" alt="" width="44" height="44" loading="lazy">
+                  <span class="menu-picker-label">チャイ</span>
+                </span>
+              </label>
+              <label class="menu-picker-item">
+                <input type="checkbox" name="item" value="チャイティーラテ">
+                <span class="menu-picker-face">
+                  <img src="images/menu_chai.png" alt="" width="44" height="44" loading="lazy">
+                  <span class="menu-picker-label">チャイティーラテ</span>
+                </span>
+              </label>
+              <label class="menu-picker-item">
+                <input type="checkbox" name="item" value="バスクチーズケーキ">
+                <span class="menu-picker-face">
+                  <img src="images/menu_sweet.png" alt="" width="44" height="44" loading="lazy">
+                  <span class="menu-picker-label">バスクチーズケーキ</span>
+                </span>
+              </label>
+              <label class="menu-picker-item">
+                <input type="checkbox" name="item" value="シナモンロール">
+                <span class="menu-picker-face">
+                  <img src="images/menu_cinnamon_roll.png" alt="" width="44" height="44" loading="lazy">
+                  <span class="menu-picker-label">シナモンロール</span>
+                </span>
+              </label>
+              <label class="menu-picker-item">
+                <input type="checkbox" name="item" value="季節のパウンド">
+                <span class="menu-picker-face">
+                  <img src="images/menu_pound_cake.png" alt="" width="44" height="44" loading="lazy">
+                  <span class="menu-picker-label">季節のパウンド</span>
+                </span>
+              </label>
+              <label class="menu-picker-item">
+                <input type="checkbox" name="item" value="アイス・コーヒー（浅煎り）">
+                <span class="menu-picker-face">
+                  <img src="images/menu_iced.png" alt="" width="44" height="44" loading="lazy">
+                  <span class="menu-picker-label">アイス・コーヒー（浅煎り）</span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
 
           <label class="field">
             <span class="field-label-row">
@@ -170,7 +238,7 @@
           </label>
 
           <div class="field">
-            <span>メモ（任意）</span>
+            <span>追加要望（任意）</span>
             <textarea name="note" rows="3" maxlength="200" placeholder="例：ミルク多めでお願いします" enterkeyhint="send"></textarea>
           </div>
 
@@ -401,9 +469,23 @@
 
       const form = document.getElementById("reserveForm");
       const noteEl = document.getElementById("formNote");
+      const menuPickerField = document.getElementById("menuPickerField");
       const reservationSuccessEl = document.getElementById("reservationSuccess");
       const reservationNoDisplayEl = document.getElementById("reservationNoDisplay");
       setDefaultPickupTime(form);
+
+      form.querySelectorAll('input[name="item"]').forEach((input) => {
+        input.addEventListener("change", () => {
+          if (menuPickerField) menuPickerField.classList.remove("is-error");
+        });
+      });
+
+      function getSelectedMenuItems(formEl) {
+        if (!formEl) return [];
+        return Array.from(formEl.querySelectorAll('input[name="item"]:checked'))
+          .map((input) => String(input.value || "").trim())
+          .filter(Boolean);
+      }
 
       function hideReservationSuccess() {
         if (reservationSuccessEl) reservationSuccessEl.hidden = true;
@@ -449,7 +531,9 @@
       const LINE_USER_KEY = "hiro-line-user";
       const LINE_STATE_KEY = "hiro-line-oauth-state";
       const lineLoginBtn = document.getElementById("lineLoginBtn");
+      const lineLinkBox = document.getElementById("lineLinkBox");
       const lineLinkStatus = document.getElementById("lineLinkStatus");
+      const lineLinkStatusText = document.getElementById("lineLinkStatusText");
       let linkedLineUser = null;
 
       // iPhone では LINE アプリ経由の復帰で sessionStorage が消えることがあるため両方使う
@@ -505,39 +589,52 @@
         }
       }
 
+      function setLineLinkMessage(text, isLinked) {
+        if (lineLinkStatusText) lineLinkStatusText.textContent = text || "";
+        if (lineLinkBox) lineLinkBox.classList.toggle("line-link-box--linked", !!isLinked);
+      }
+
       function updateLineLinkUi() {
         linkedLineUser = loadLinkedLineUser();
-        if (!lineLoginBtn || !lineLinkStatus) return;
+        if (!lineLoginBtn || !lineLinkStatusText) return;
 
         if (!isLineLoginConfigured()) {
           lineLoginBtn.hidden = true;
-          lineLinkStatus.textContent =
-            "（デモ）LINE連携は未設定です。本番では config.js に LINE_LOGIN_CHANNEL_ID を設定してください。";
+          setLineLinkMessage(
+            "（デモ）LINE連携は未設定です。本番では config.js に LINE_LOGIN_CHANNEL_ID を設定してください。",
+            false
+          );
           return;
         }
 
         if (linkedLineUser) {
           lineLoginBtn.hidden = true;
-          lineLinkStatus.textContent =
+          setLineLinkMessage(
             "LINE連携済み：" + (linkedLineUser.display_name || "ユーザー") +
-            " さん。準備完了の通知はLINEでお知らせします。";
+            " さん。準備完了の通知はLINEでお知らせします。",
+            true
+          );
           applyLineNameToForm(form, linkedLineUser);
         } else {
           lineLoginBtn.hidden = false;
-          lineLinkStatus.textContent =
-            "予約前に LINE と連携してください。準備完了の通知を LINE でお送りします。";
+          setLineLinkMessage(
+            "予約前に LINE と連携してください。準備完了の通知を LINE でお送りします。",
+            false
+          );
         }
       }
 
       function startLineLogin() {
         if (location.protocol === "file:") {
-          lineLinkStatus.textContent =
+          setLineLinkMessage(
             "file:// では LINE 連携できません。node preview-server.js でローカルサーバーを起動し、" +
-            location.origin + "/ から開いてください。";
+            location.origin + "/ から開いてください。",
+            false
+          );
           return;
         }
         if (!isLineLoginConfigured()) {
-          lineLinkStatus.textContent = "LINE Login が未設定です。";
+          setLineLinkMessage("LINE Login が未設定です。", false);
           return;
         }
         const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -560,25 +657,27 @@
 
       if (location.hash === "#line-linked") {
         applyLineNameToForm(form, loadLinkedLineUser(), { force: true });
-        if (lineLinkStatus) {
-          lineLinkStatus.textContent =
-            "LINE連携済み：" + ((loadLinkedLineUser() || {}).display_name || "ユーザー") +
-            " さん。準備完了の通知はLINEでお知らせします。";
-        }
+        setLineLinkMessage(
+          "LINE連携済み：" + ((loadLinkedLineUser() || {}).display_name || "ユーザー") +
+          " さん。準備完了の通知はLINEでお知らせします。",
+          true
+        );
         if (lineLoginBtn) lineLoginBtn.hidden = true;
         history.replaceState(null, "", location.pathname + location.search + "#reserve");
       } else if (location.hash === "#line-error") {
-        if (lineLinkStatus) {
-          lineLinkStatus.textContent =
-            "LINE連携に失敗しました。Safari で開き直して、もう一度お試しください。";
-        }
+        setLineLinkMessage(
+          "LINE連携に失敗しました。Safari で開き直して、もう一度お試しください。",
+          false
+        );
         if (lineLoginBtn) lineLoginBtn.hidden = false;
         history.replaceState(null, "", location.pathname + location.search + "#reserve");
       }
 
-      if (location.protocol === "file:" && lineLinkStatus) {
-        lineLinkStatus.textContent =
-          "⚠ ファイルを直接開いています。LINE 連携には Web サーバー経由でアクセスしてください。";
+      if (location.protocol === "file:" && lineLinkStatusText) {
+        setLineLinkMessage(
+          "⚠ ファイルを直接開いています。LINE 連携には Web サーバー経由でアクセスしてください。",
+          false
+        );
       }
 
       // Supabase クライアントを初期化（プレースホルダーの場合はデモモードに切り替え）
@@ -652,13 +751,21 @@
 
         const submitBtn = form.querySelector('button[type="submit"]');
         const fd = new FormData(form);
+        const selectedItems = getSelectedMenuItems(form);
         const reservation = {
           name: String(fd.get("name") || "").trim(),
-          item: String(fd.get("item") || "").trim(),
+          item: selectedItems.join("、"),
           time: String(fd.get("time") || "").trim(),
           note: String(fd.get("note") || "").trim(),
           status: "pending",
         };
+
+        if (!reservation.item) {
+          noteEl.textContent = "メニューを1つ以上選んでください。";
+          if (menuPickerField) menuPickerField.classList.add("is-error");
+          return;
+        }
+        if (menuPickerField) menuPickerField.classList.remove("is-error");
 
         if (isLineLoginConfigured() && !linkedLineUser) {
           noteEl.textContent = "予約前に「LINEと連携する」を押して、通知の受け取り設定をしてください。";

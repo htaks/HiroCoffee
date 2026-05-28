@@ -76,13 +76,20 @@ Deno.serve(async (req) => {
       );
     }
 
+    const itemText = String(reservation.item || "")
+      .split("、")
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .join("\n");
+
     const message =
       `${reservation.name} 様\n\n` +
       `Hiro Coffee です。\n` +
       (reservation.reservation_no
         ? `ご予約番号: ${reservation.reservation_no}\n\n`
         : "") +
-      `ご予約の「${reservation.item}」のご用意ができました。\n` +
+      `ご予約内容:\n${itemText}\n\n` +
+      `のご用意ができました。\n` +
       `受け取り時間: ${reservation.time}\n\n` +
       `お待たせいたしました。ご来店をお待ちしております。`;
 

@@ -523,6 +523,15 @@
         .replace(/'/g, "&#39;");
     }
 
+    function formatMenuItems(item) {
+      if (!item) return "（なし）";
+      return String(item)
+        .split("、")
+        .map((part) => escapeHtml(part.trim()))
+        .filter(Boolean)
+        .join("<br>");
+    }
+
     function render() {
       const list = allReservations.filter(
         (r) => currentFilter === "all" || r.status === currentFilter
@@ -578,9 +587,9 @@
               (r.reservation_no
                 ? '<dt>予約番号</dt><dd><strong class="res-no">' + escapeHtml(r.reservation_no) + '</strong></dd>'
                 : '') +
-              '<dt>メニュー</dt><dd>' + escapeHtml(r.item) + '</dd>' +
+              '<dt>メニュー</dt><dd>' + formatMenuItems(r.item) + '</dd>' +
               '<dt>受取時間</dt><dd>' + escapeHtml(r.time) + '</dd>' +
-              '<dt>メモ</dt><dd>' + (r.note ? escapeHtml(r.note) : "（なし）") + '</dd>' +
+              '<dt>追加要望</dt><dd>' + (r.note ? escapeHtml(r.note) : "（なし）") + '</dd>' +
             '</dl>' +
             '<div class="res-actions">' +
               notifyBtn +
