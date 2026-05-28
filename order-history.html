@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#fbf5ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#3f2f1e" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Hiro Coffee">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="apple-touch-icon" href="images/hiro_coffee_logo.png">
+  <link rel="icon" href="images/hiro_coffee_logo.png">
+  <title>注文履歴 - Hiro Coffee</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="menu-prices.js"></script>
+  <script src="demo-store.js"></script>
+  <script src="reservation-history.js"></script>
+  <script src="order-history-view.js"></script>
+  <script src="site-nav.js"></script>
+  <script src="order-history-page.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <button
+      type="button"
+      class="site-header__menu-btn"
+      id="siteMenuBtn"
+      aria-label="メニューを開く"
+      aria-expanded="false"
+      aria-controls="siteNavDrawer"
+    >
+      <span class="site-header__menu-icon" aria-hidden="true"></span>
+    </button>
+    <span class="site-header__title">Hiro Coffee</span>
+  </header>
+
+  <div id="siteNavContainer"></div>
+
+  <div class="wrap">
+    <main class="main-grid">
+      <section class="card order-history-page">
+        <h2>注文履歴</h2>
+        <p class="muted" id="orderHistoryNote">LINE連携後、ご注文の履歴を確認できます。</p>
+        <div id="orderHistoryEmpty" class="order-history-empty" hidden>まだ注文履歴はありません。</div>
+        <div id="orderHistoryList" class="reservation-history__list"></div>
+        <div class="actions">
+          <a class="btn" href="index.html#reserve">テイクアウト予約へ</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2026 Hiro Coffee · Kyoto</p>
+      <p class="footer-version" id="siteVersion"></p>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      const versionEl = document.getElementById("siteVersion");
+      const version = (window.HIRO_CONFIG || {}).SITE_VERSION;
+      if (versionEl && version) versionEl.textContent = "v" + version;
+      const mount = document.getElementById("siteNavContainer");
+      if (mount && window.HIRO_SITE_NAV) {
+        mount.innerHTML = window.HIRO_SITE_NAV.renderSiteNav();
+      }
+    })();
+  </script>
+</body>
+</html>

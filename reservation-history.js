@@ -51,6 +51,10 @@
     return items;
   }
 
+  function readActive(lineUserId) {
+    return read(lineUserId).filter((row) => row.status !== "handed_over");
+  }
+
   function addEntry(lineUserId, entry) {
     if (!lineUserId || !entry || !entry.id) return read(lineUserId);
     const items = read(lineUserId).filter((row) => String(row.id) !== String(entry.id));
@@ -79,6 +83,7 @@
 
   window.HIRO_RESERVATION_HISTORY = {
     read,
+    readActive,
     addEntry,
     mergeStatuses,
     keepOnlyIds,

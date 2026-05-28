@@ -19,6 +19,8 @@
   <script src="menu-prices.js"></script>
   <script src="demo-store.js"></script>
   <script src="reservation-history.js"></script>
+  <script src="order-history-view.js"></script>
+  <script src="site-nav.js"></script>
 </head>
 <body>
   <header class="site-header">
@@ -35,23 +37,7 @@
     <span class="site-header__title">Hiro Coffee</span>
   </header>
 
-  <nav id="siteNavDrawer" class="site-nav" hidden aria-hidden="true">
-    <div class="site-nav__backdrop" id="siteNavBackdrop"></div>
-    <div class="site-nav__panel" role="dialog" aria-modal="true" aria-labelledby="siteNavTitle">
-      <div class="site-nav__head">
-        <h2 id="siteNavTitle" class="site-nav__title">メニュー</h2>
-        <button type="button" class="site-nav__close" id="siteNavClose" aria-label="メニューを閉じる">×</button>
-      </div>
-      <ul class="site-nav__list">
-        <li><button type="button" class="site-nav__link" data-nav-go="menu">メニュー</button></li>
-        <li><button type="button" class="site-nav__link" data-nav-go="reserve">テイクアウト予約</button></li>
-        <li><button type="button" class="site-nav__link" data-nav-go="order-history">注文履歴</button></li>
-        <li><button type="button" class="site-nav__link" data-nav-go="location">アクセス</button></li>
-        <li><button type="button" class="site-nav__link" data-nav-go="hours">営業時間</button></li>
-        <li><button type="button" class="site-nav__link" data-nav-go="about">焙煎のこだわり</button></li>
-      </ul>
-    </div>
-  </nav>
+  <div id="siteNavContainer"></div>
 
   <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
   <div class="wrap">
@@ -70,12 +56,6 @@
       <p class="lead">
         手づくりシロップと、毎朝焙煎の豆。テイクアウトも店内も、笑顔になれる一杯を。
       </p>
-      <div class="actions">
-        <button class="btn" type="button" onclick="go('reserve')">テイクアウト予約</button>
-        <button class="btn" type="button" onclick="go('location')">アクセス</button>
-        <button class="btn" type="button" onclick="go('hours')">営業時間</button>
-        <button class="btn" type="button" onclick="go('about')">焙煎のこだわり</button>
-      </div>
     </header>
 
     <main class="main-grid">
@@ -294,13 +274,12 @@
 
           <p id="formNote" class="note" role="status" aria-live="polite"></p>
         </form>
-      </section>
 
-      <section id="order-history" class="card">
-        <h2>注文履歴</h2>
-        <p class="muted" id="orderHistoryNote">LINE連携後、ご注文の履歴を確認できます。</p>
-        <div id="orderHistoryEmpty" class="order-history-empty" hidden>まだ注文履歴はありません。</div>
-        <div id="orderHistoryList" class="reservation-history__list"></div>
+        <div id="activeOrderHistory" class="reservation-history" hidden>
+          <h3 class="reservation-history__heading">ご予約中</h3>
+          <p class="muted reservation-history__intro" id="activeOrderHistoryNote"></p>
+          <div id="activeOrderHistoryList" class="reservation-history__list"></div>
+        </div>
       </section>
 
       <div id="reserveConfirmModal" class="reserve-modal" hidden aria-hidden="true">
@@ -447,51 +426,18 @@
     })();
 
     function go(id) {
-      closeSiteNav();
+      if (window.HIRO_SITE_NAV) window.HIRO_SITE_NAV.closeSiteNav();
       const el = document.getElementById(id);
       if (!el) return;
       el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    function openSiteNav() {
-      const drawer = document.getElementById("siteNavDrawer");
-      const btn = document.getElementById("siteMenuBtn");
-      if (!drawer) return;
-      drawer.hidden = false;
-      drawer.setAttribute("aria-hidden", "false");
-      if (btn) btn.setAttribute("aria-expanded", "true");
-      document.body.classList.add("site-nav-open");
-    }
-
-    function closeSiteNav() {
-      const drawer = document.getElementById("siteNavDrawer");
-      const btn = document.getElementById("siteMenuBtn");
-      if (!drawer) return;
-      drawer.hidden = true;
-      drawer.setAttribute("aria-hidden", "true");
-      if (btn) btn.setAttribute("aria-expanded", "false");
-      document.body.classList.remove("site-nav-open");
-    }
-
-    (function initSiteNav() {
-      const btn = document.getElementById("siteMenuBtn");
-      const closeBtn = document.getElementById("siteNavClose");
-      const backdrop = document.getElementById("siteNavBackdrop");
-      if (btn) btn.addEventListener("click", openSiteNav);
-      if (closeBtn) closeBtn.addEventListener("click", closeSiteNav);
-      if (backdrop) backdrop.addEventListener("click", closeSiteNav);
-      document.querySelectorAll("[data-nav-go]").forEach((link) => {
-        link.addEventListener("click", () => {
-          const target = link.getAttribute("data-nav-go");
-          if (target) go(target);
-        });
-      });
-      document.addEventListener("keydown", (event) => {
-        const drawer = document.getElementById("siteNavDrawer");
-        if (event.key === "Escape" && drawer && !drawer.hidden) {
-          closeSiteNav();
-        }
-      });
+    (function mountSiteNav() {
+      const mount = document.getElementById("siteNavContainer");
+      if (mount && window.HIRO_SITE_NAV) {
+        mount.innerHTML = window.HIRO_SITE_NAV.renderSiteNav();
+        window.HIRO_SITE_NAV.initSiteNav();
+      }
     })();
 
     function scrollToTop() {
@@ -658,9 +604,10 @@
       const form = document.getElementById("reserveForm");
       const noteEl = document.getElementById("formNote");
       const menuPickerField = document.getElementById("menuPickerField");
-      const orderHistoryNoteEl = document.getElementById("orderHistoryNote");
-      const orderHistoryEmptyEl = document.getElementById("orderHistoryEmpty");
-      const orderHistoryListEl = document.getElementById("orderHistoryList");
+      const activeOrderHistoryEl = document.getElementById("activeOrderHistory");
+      const activeOrderHistoryNoteEl = document.getElementById("activeOrderHistoryNote");
+      const activeOrderHistoryListEl = document.getElementById("activeOrderHistoryList");
+      const historyView = window.HIRO_ORDER_HISTORY_VIEW;
       const historyStore = window.HIRO_RESERVATION_HISTORY;
       const reserveConfirmModal = document.getElementById("reserveConfirmModal");
       const reserveConfirmBackdrop = document.getElementById("reserveConfirmBackdrop");
@@ -710,78 +657,33 @@
         container.hidden = false;
       }
 
-      function renderBreakdownHtml(breakdown) {
-        if (!breakdown || !breakdown.lines.length || !menuPrices) return "";
-        return breakdown.lines.map((line) => (
-          '<li class="order-breakdown__item">' +
-            '<span class="order-breakdown__name">' + escapeHtml(line.name) + '</span>' +
-            '<span class="order-breakdown__price">' + menuPrices.formatYen(line.price) + '</span>' +
-          '</li>'
-        )).join("");
-      }
-
-      function formatCustomerStatus(status) {
-        if (status === "handed_over") {
-          return { label: "お渡し済み", className: "order-status--handed-over" };
-        }
-        if (status === "done") {
-          return { label: "準備完了", className: "order-status--done" };
-        }
-        return { label: "準備中", className: "order-status--pending" };
-      }
-
-      function renderOrderHistory() {
+      function renderActiveOrders() {
         const user = loadLinkedLineUser();
         const lineUserId = user && user.line_user_id;
-        if (!orderHistoryListEl || !historyStore) return;
+        if (!activeOrderHistoryEl || !activeOrderHistoryListEl || !historyStore || !historyView || !menuPrices) {
+          if (activeOrderHistoryEl) activeOrderHistoryEl.hidden = true;
+          return;
+        }
 
         if (!lineUserId) {
-          if (orderHistoryNoteEl) {
-            orderHistoryNoteEl.textContent = "LINE連携後、ご注文の履歴を確認できます。";
-            orderHistoryNoteEl.hidden = false;
-          }
-          orderHistoryListEl.innerHTML = "";
-          if (orderHistoryEmptyEl) orderHistoryEmptyEl.hidden = true;
+          activeOrderHistoryEl.hidden = true;
           return;
         }
 
-        const items = historyStore.read(lineUserId);
-        if (orderHistoryNoteEl) {
-          orderHistoryNoteEl.textContent = items.length
-            ? "これまでのご注文一覧です。"
-            : "まだ注文履歴はありません。テイクアウト予約するとここに表示されます。";
-          orderHistoryNoteEl.hidden = false;
-        }
-
+        const items = historyStore.readActive(lineUserId);
         if (!items.length) {
-          orderHistoryListEl.innerHTML = "";
-          if (orderHistoryEmptyEl) orderHistoryEmptyEl.hidden = false;
+          activeOrderHistoryListEl.innerHTML = "";
+          activeOrderHistoryEl.hidden = true;
           return;
         }
 
-        if (orderHistoryEmptyEl) orderHistoryEmptyEl.hidden = true;
-        orderHistoryListEl.innerHTML = items.map((entry) => {
-          const breakdown = menuPrices
-            ? menuPrices.buildBreakdownFromItemString(entry.item, entry.wants_bag)
-            : { lines: [], total: entry.total_amount || 0 };
-          if (entry.total_amount != null) breakdown.total = entry.total_amount;
-          const status = formatCustomerStatus(entry.status || "pending");
-          const itemClass = entry.status === "handed_over"
-            ? " reservation-history__item--handed-over"
-            : "";
-          return (
-            '<article class="reservation-history__item' + itemClass + '">' +
-              '<div class="reservation-history__head">' +
-                '<p class="reservation-history__label">ご予約番号</p>' +
-                '<span class="order-status ' + status.className + '">' + escapeHtml(status.label) + '</span>' +
-              '</div>' +
-              '<p class="reservation-history__no">' + escapeHtml(entry.reservation_no || "") + '</p>' +
-              '<ul class="order-breakdown">' + renderBreakdownHtml(breakdown) + '</ul>' +
-              '<p class="reservation-history__total">合計金額 ' + menuPrices.formatYen(breakdown.total) + '</p>' +
-              '<p class="reservation-history__meta">受取 ' + escapeHtml(entry.time || "") + '</p>' +
-            '</article>'
-          );
-        }).join("");
+        activeOrderHistoryEl.hidden = false;
+        if (activeOrderHistoryNoteEl) {
+          activeOrderHistoryNoteEl.textContent = "お渡しが完了すると、この一覧から消えます。";
+        }
+        activeOrderHistoryListEl.innerHTML = items.map((entry) =>
+          historyView.renderOrderCard(entry, menuPrices)
+        ).join("");
       }
 
       function addReservationToHistory(data, reservation) {
@@ -797,20 +699,20 @@
           status: "pending",
           created_at: new Date().toISOString(),
         });
-        renderOrderHistory();
+        renderActiveOrders();
       }
 
       async function syncReservationHistory() {
         const user = loadLinkedLineUser();
         const lineUserId = user && user.line_user_id;
         if (!historyStore || !lineUserId) {
-          renderOrderHistory();
+          renderActiveOrders();
           return;
         }
         const items = historyStore.read(lineUserId);
         const ids = items.map((row) => row.id).filter(Boolean);
         if (!ids.length) {
-          renderOrderHistory();
+          renderActiveOrders();
           return;
         }
 
@@ -838,7 +740,7 @@
         } catch (err) {
           console.warn("[Hiro Coffee] reservation history sync failed", err);
         }
-        renderOrderHistory();
+        renderActiveOrders();
       }
 
       let historySyncTimer = null;
@@ -1061,7 +963,7 @@
             false
           );
         }
-        renderOrderHistory();
+        renderActiveOrders();
       }
 
       function startLineLogin() {
@@ -1262,7 +1164,7 @@
             form.reset();
             setDefaultPickupTime(form);
             applyLineNameToForm(form, loadLinkedLineUser());
-            go("order-history");
+            go("activeOrderHistory");
             return;
           }
 
@@ -1279,7 +1181,7 @@
             form.reset();
             setDefaultPickupTime(form);
             applyLineNameToForm(form, loadLinkedLineUser());
-            go("order-history");
+            go("activeOrderHistory");
           }
         } catch (err) {
           console.error(err);
@@ -1305,7 +1207,7 @@
         demoStore.onChange(() => syncReservationHistory());
       }
       if (historyStore && historyStore.onChange) {
-        historyStore.onChange(() => renderOrderHistory());
+        historyStore.onChange(() => renderActiveOrders());
       }
     });
   </script>
