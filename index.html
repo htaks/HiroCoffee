@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#fbf5ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#3f2f1e" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Hiro Coffee">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="apple-touch-icon" href="images/hiro_coffee_logo.png">
+  <link rel="icon" href="images/hiro_coffee_logo.png">
+  <title>Hiro Coffee - 京都の楽しいコーヒー時間</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+  <script src="config.js"></script>
+  <script src="demo-store.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="hero-top">
+        <div class="brand">
+          <img src="images/hiro_coffee_logo.png" alt="Hiro Coffee 京都ロゴ" class="brand-logo">
+          <span class="steam steam--1" aria-hidden="true"></span>
+          <span class="steam steam--2" aria-hidden="true"></span>
+          <span class="steam steam--3" aria-hidden="true"></span>
+        </div>
+      </div>
+      <h1>ほっとする、楽しいコーヒー時間。</h1>
+      <p class="lead">
+        手づくりシロップと、毎朝焙煎の豆。テイクアウトも店内も、笑顔になれる一杯を。
+      </p>
+      <div class="actions">
+        <button class="btn" type="button" onclick="go('menu')">メニューを見る</button>
+        <button class="btn" type="button" onclick="go('reserve')">テイクアウト予約</button>
+        <button class="btn" type="button" onclick="go('location')">お店の場所</button>
+        <button class="btn" type="button" onclick="go('hours')">営業時間</button>
+        <button class="btn" type="button" onclick="go('about')">焙煎のこだわり</button>
+      </div>
+    </header>
+
+    <main class="main-grid">
+      <section id="menu" class="card">
+        <h2>メニュー</h2>
+        <p class="muted">カテゴリで絞り込みできます。</p>
+        <div class="chips" role="tablist" aria-label="メニューカテゴリ">
+          <button type="button" class="chip is-active" data-cat-btn="all" onclick="setCategory('all')">すべて</button>
+          <button type="button" class="chip" data-cat-btn="coffee" onclick="setCategory('coffee')">コーヒー</button>
+          <button type="button" class="chip" data-cat-btn="tea" onclick="setCategory('tea')">紅茶</button>
+          <button type="button" class="chip" data-cat-btn="sweet" onclick="setCategory('sweet')">甘いもの</button>
+        </div>
+
+        <div class="menu-grid" aria-live="polite">
+          <article class="menu-item" data-cat="coffee" tabindex="0">
+            <div class="menu-photo menu-photo--coffee" aria-hidden="true"></div>
+            <div class="menu-title">カフェラテ</div>
+            <div class="menu-desc">ミルクふわふわ、やさしい甘み</div>
+            <div class="menu-price">¥520〜</div>
+          </article>
+          <article class="menu-item" data-cat="coffee" tabindex="0">
+            <div class="menu-photo menu-photo--cappuccino" aria-hidden="true"></div>
+            <div class="menu-title">カプチーノ</div>
+            <div class="menu-desc">泡の香りを楽しむ一杯</div>
+            <div class="menu-price">¥560〜</div>
+          </article>
+          <article class="menu-item" data-cat="coffee" tabindex="0">
+            <div class="menu-photo menu-photo--ethiopia" aria-hidden="true"></div>
+            <div class="menu-title">エチオピア（浅煎り）</div>
+            <div class="menu-desc">フルーティな香り</div>
+            <div class="menu-price">¥480〜</div>
+          </article>
+          <article class="menu-item" data-cat="tea" tabindex="0">
+            <div class="menu-photo menu-photo--tea" aria-hidden="true"></div>
+            <div class="menu-title">アールグレイ</div>
+            <div class="menu-desc">ベルガモットの上品な香り</div>
+            <div class="menu-price">¥490</div>
+          </article>
+          <article class="menu-item" data-cat="tea" tabindex="0">
+            <div class="menu-photo menu-photo--chai-hot" aria-hidden="true"></div>
+            <div class="menu-title">チャイ</div>
+            <div class="menu-desc">スパイスのあたたかさ</div>
+            <div class="menu-price">¥540</div>
+          </article>
+          <article class="menu-item" data-cat="tea sweet" tabindex="0">
+            <div class="menu-photo menu-photo--chai" aria-hidden="true"></div>
+            <div class="menu-title">チャイティーラテ</div>
+            <div class="menu-desc">濃厚ミルク × スパイス香る甘さ</div>
+            <div class="menu-price">¥620</div>
+          </article>
+          <article class="menu-item" data-cat="sweet" tabindex="0">
+            <div class="menu-photo menu-photo--sweet" aria-hidden="true"></div>
+            <div class="menu-title">バスクチーズケーキ</div>
+            <div class="menu-desc">とろける食感、コーヒーに相性抜群</div>
+            <div class="menu-price">¥680</div>
+          </article>
+          <article class="menu-item" data-cat="sweet" tabindex="0">
+            <div class="menu-photo menu-photo--cinnamon" aria-hidden="true"></div>
+            <div class="menu-title">シナモンロール</div>
+            <div class="menu-desc">シナモンの香りでほっこり</div>
+            <div class="menu-price">¥620</div>
+          </article>
+          <article class="menu-item" data-cat="sweet" tabindex="0">
+            <div class="menu-photo menu-photo--pound" aria-hidden="true"></div>
+            <div class="menu-title">季節のパウンド</div>
+            <div class="menu-desc">その季節の素材で焼き上げ</div>
+            <div class="menu-price">¥580</div>
+          </article>
+          <article class="menu-item" data-cat="coffee" tabindex="0">
+            <div class="menu-photo menu-photo--iced" aria-hidden="true"></div>
+            <div class="menu-title">アイス・コーヒー（浅煎り）</div>
+            <div class="menu-desc">さっぱり、でも香りはしっかり</div>
+            <div class="menu-price">¥500</div>
+          </article>
+        </div>
+        <p class="note">※表示はサンプルです。実際のメニューに合わせて変更できます。</p>
+      </section>
+
+      <section id="reserve" class="card">
+        <h2>テイクアウト予約</h2>
+        <p class="muted">
+          下記フォームから予約できます。準備完了の通知は LINE でお送りします。
+        </p>
+
+        <div class="line-link-box" id="lineLinkBox">
+          <button type="button" class="btn btn-line" id="lineLoginBtn">LINEと連携する（通知用）</button>
+          <p id="lineLinkStatus" class="note line-link-status" role="status" aria-live="polite"></p>
+        </div>
+
+        <form id="reserveForm" class="form" autocomplete="on">
+          <label class="field">
+            <span>お名前</span>
+            <input name="name" type="text" required maxlength="20" placeholder="例：コーヒー太郎" autocomplete="name" autocapitalize="words" enterkeyhint="next">
+          </label>
+
+          <label class="field">
+            <span>希望メニュー</span>
+            <select name="item" required>
+              <option value="" selected disabled hidden>メニューを選んでください</option>
+              <option value="カフェラテ">カフェラテ</option>
+              <option value="カプチーノ">カプチーノ</option>
+              <option value="アールグレイ">アールグレイ</option>
+              <option value="チャイ">チャイ</option>
+              <option value="チャイティーラテ">チャイティーラテ</option>
+              <option value="バスクチーズケーキ">バスクチーズケーキ</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span class="field-label-row">
+              <span>受け取り時間</span>
+              <span class="field-label-actions">
+                <span class="pickup-time-label">現在時刻</span>
+                <button type="button" class="btn btn-pickup-offset" data-offset-min="10">+10分</button>
+                <button type="button" class="btn btn-pickup-offset" data-offset-min="20">+20分</button>
+                <button type="button" class="btn btn-pickup-offset" data-offset-min="30">+30分</button>
+              </span>
+            </span>
+            <div class="time-input-wrap">
+              <input name="time" type="time" class="time-input" required>
+              <button type="button" class="time-input-icon" id="pickupTimePickerBtn" aria-label="受け取り時間を選ぶ">
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
+                  <path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                </svg>
+              </button>
+            </div>
+          </label>
+
+          <div class="field">
+            <span>メモ（任意）</span>
+            <textarea name="note" rows="3" maxlength="200" placeholder="例：ミルク多めでお願いします" enterkeyhint="send"></textarea>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn btn-primary">予約する</button>
+          </div>
+
+          <p id="formNote" class="note" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section id="location" class="card">
+        <h2>お店の場所</h2>
+        <div class="two-col">
+          <div>
+            <div class="map" role="img" aria-label="東京都世田谷区松原2丁目45-1のGoogle Map">
+              <iframe
+                title="Google Map 地図"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                allowfullscreen
+                src="https://maps.google.com/maps?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%96%E7%94%B0%E8%B0%B7%E5%8C%BA%E6%9D%BE%E5%8E%9F2%E4%B8%81%E7%9B%AE45-1&hl=ja&z=16&output=embed">
+              </iframe>
+            </div>
+          </div>
+          <div>
+            <h3 class="h3">アクセス</h3>
+            <p class="muted">最寄り駅から徒歩3分</p>
+            <ul class="list">
+              <li>住所: 東京都世田谷区松原2丁目45-1</li>
+              <li>電話: <a class="tel-link" href="tel:00012345678">000&#8209;1234&#8209;5678</a></li>
+              <li>営業時間内はテイクアウトOK</li>
+            </ul>
+            <div class="actions">
+              <button
+                class="btn"
+                type="button"
+                onclick="window.open('https://www.google.com/maps/search/?api=1&query=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%96%E7%94%B0%E8%B0%B7%E5%8C%BA%E6%9D%BE%E5%8E%9F2%E4%B8%81%E7%9B%AE45-1','_blank','noopener,noreferrer')"
+              >Google Mapで開く</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="hours" class="card two-col">
+        <div>
+          <h2>営業時間</h2>
+          <p class="muted">混雑しがちな時間は早めの予約がおすすめです。</p>
+        </div>
+        <div>
+          <table class="table" aria-label="営業時間">
+            <thead>
+              <tr>
+                <th scope="col">曜日</th>
+                <th scope="col">営業時間</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">月〜金</th>
+                <td>9:00 - 18:00</td>
+              </tr>
+              <tr>
+                <th scope="row">土日祝</th>
+                <td>10:00 - 19:00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="about" class="card">
+        <h2>焙煎のこだわり</h2>
+        <p class="about-lead">
+          一杯ごとに、豆の香りと手仕事のあたたかさを届けたい。
+          Hiro Coffee では、毎朝の焙煎と店内仕込みのシロップで、
+          ほっとするコーヒー時間をつくっています。
+        </p>
+        <div class="about-features">
+          <article class="about-feature about-feature--roast">
+            <div class="about-feature__icon" aria-hidden="true">☕</div>
+            <h3 class="h3">毎朝焙煎</h3>
+            <p class="about-feature__lead">
+              開店前の静かな時間に、その日の一杯から豆を仕込みます。
+              店内に広がる香りが、Hiro Coffee の一日のはじまりです。
+            </p>
+            <ul class="about-points">
+              <li>朝届いた豆を、必要な分だけ丁寧に焙煎</li>
+              <li>注文を受けてから挽くので、香り立ちがちがう</li>
+              <li>最後の一口まで、やさしい余韻を大切に</li>
+            </ul>
+          </article>
+          <article class="about-feature about-feature--syrup">
+            <div class="about-feature__icon" aria-hidden="true">🍯</div>
+            <h3 class="h3">手づくりシロップ</h3>
+            <p class="about-feature__lead">
+              ラテやカフェオレに合わせるシロップは、店内で少量ずつ仕込んでいます。
+              甘さだけでなく、香りと口当たりまで整えた味わいです。
+            </p>
+            <ul class="about-points">
+              <li>季節の果実やスパイスをひとつまみ加えて</li>
+              <li>ミルクのコクと引き立ち合うバランス</li>
+              <li>テイクアウトしても、店内と変わらない美味しさ</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2026 Hiro Coffee · Kyoto</p>
+      <p class="muted small"></p>
+    </footer>
+  </div>
+
+  <button id="toTopBtn" class="to-top" type="button" aria-label="ページの先頭へ戻る" title="ページの先頭へ戻る" onclick="scrollToTop()">
+    <span aria-hidden="true">↑</span>
+    <span class="to-top__label">トップへ</span>
+  </button>
+
+  <script>
+    function go(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function updateToTopVisibility() {
+      const btn = document.getElementById("toTopBtn");
+      if (!btn) return;
+      btn.classList.toggle("is-visible", window.scrollY > 240);
+    }
+
+    function setCategory(cat) {
+      const chips = document.querySelectorAll("[data-cat-btn]");
+      chips.forEach((b) => b.classList.toggle("is-active", b.getAttribute("data-cat-btn") === cat));
+
+      const items = document.querySelectorAll(".menu-item");
+      items.forEach((it) => {
+        const itemCat = (it.getAttribute("data-cat") || "").trim();
+        const cats = itemCat.split(/\s+/).filter(Boolean);
+        const shouldShow = cat === "all" || cats.includes(cat);
+        it.classList.toggle("is-hidden", !shouldShow);
+      });
+    }
+
+    function getPickupTimeAfterMinutes(minutes) {
+      const d = new Date();
+      d.setMinutes(d.getMinutes() + minutes);
+      return formatTimeValue(d);
+    }
+
+    function formatTimeValue(d) {
+      return String(d.getHours()).padStart(2, "0") + ":" +
+        String(d.getMinutes()).padStart(2, "0");
+    }
+
+    function setPickupTimeAfterMinutes(form, minutes) {
+      if (!form || !form.time) return;
+      form.time.value = getPickupTimeAfterMinutes(minutes);
+    }
+
+    function setDefaultPickupTime(form) {
+      setPickupTimeAfterMinutes(form, 20);
+    }
+
+    function initScrollReveal() {
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const targets = document.querySelectorAll(
+        ".hero, .card, .menu-item, .footer"
+      );
+
+      if (reduceMotion || !("IntersectionObserver" in window)) {
+        targets.forEach((el) => el.classList.add("reveal", "is-visible"));
+        return;
+      }
+
+      let menuIdx = 0;
+      targets.forEach((el) => {
+        el.classList.add("reveal");
+        if (el.classList.contains("hero")) {
+          el.classList.add("reveal--drop");
+        } else if (el.classList.contains("footer")) {
+          el.classList.add("reveal--pop");
+        } else if (el.classList.contains("menu-item")) {
+          el.classList.add(menuIdx % 2 === 0 ? "reveal--left" : "reveal--right");
+          el.style.setProperty("--reveal-delay", (menuIdx % 6) * 70 + "ms");
+          menuIdx++;
+        } else {
+          el.classList.add("reveal--zoom");
+        }
+      });
+
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            entry.target.classList.toggle("is-visible", entry.isIntersecting);
+          });
+        },
+        { threshold: 0.15, rootMargin: "0px 0px -10% 0px" }
+      );
+
+      targets.forEach((el) => io.observe(el));
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setCategory("all");
+      updateToTopVisibility();
+      window.addEventListener("scroll", updateToTopVisibility, { passive: true });
+      initScrollReveal();
+
+      const form = document.getElementById("reserveForm");
+      const noteEl = document.getElementById("formNote");
+      setDefaultPickupTime(form);
+
+      document.querySelectorAll("[data-offset-min]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const minutes = Number(btn.getAttribute("data-offset-min"));
+          if (!Number.isFinite(minutes)) return;
+          setPickupTimeAfterMinutes(form, minutes);
+        });
+      });
+
+      const pickupTimePickerBtn = document.getElementById("pickupTimePickerBtn");
+      if (pickupTimePickerBtn && form.time) {
+        pickupTimePickerBtn.addEventListener("click", () => {
+          if (typeof form.time.showPicker === "function") {
+            form.time.showPicker();
+          } else {
+            form.time.focus();
+            form.time.click();
+          }
+        });
+      }
+
+      // LINE 友だち追加ボタンの URL を config から差し込み
+      const cfg = window.HIRO_CONFIG || {};
+      const lineUrl = cfg.LINE_ADD_URL || "#";
+      document.querySelectorAll("#lineAddBtn").forEach((a) => {
+        a.setAttribute("href", lineUrl);
+      });
+
+      const LINE_USER_KEY = "hiro-line-user";
+      const lineLoginBtn = document.getElementById("lineLoginBtn");
+      const lineLinkStatus = document.getElementById("lineLinkStatus");
+      let linkedLineUser = null;
+
+      function isLineLoginConfigured() {
+        const channelId = String(cfg.LINE_LOGIN_CHANNEL_ID || "").trim();
+        return channelId && channelId.indexOf("REPLACE_") === -1;
+      }
+
+      function getLineRedirectUri() {
+        if (cfg.LINE_OAUTH_REDIRECT_URI) {
+          return cfg.LINE_OAUTH_REDIRECT_URI;
+        }
+        return new URL("line-callback.html", location.href).href.split("?")[0];
+      }
+
+      function loadLinkedLineUser() {
+        try {
+          const raw = sessionStorage.getItem(LINE_USER_KEY);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          if (!parsed || !parsed.line_user_id) return null;
+          return parsed;
+        } catch (err) {
+          return null;
+        }
+      }
+
+      function applyLineNameToForm(formEl, user, options) {
+        if (!formEl || !formEl.name || !user) return;
+        const displayName = String(user.display_name || "").trim();
+        if (!displayName) return;
+        const current = String(formEl.name.value || "").trim();
+        if (options && options.force) {
+          formEl.name.value = displayName.slice(0, 20);
+          return;
+        }
+        if (!current) {
+          formEl.name.value = displayName.slice(0, 20);
+        }
+      }
+
+      function updateLineLinkUi() {
+        linkedLineUser = loadLinkedLineUser();
+        if (!lineLoginBtn || !lineLinkStatus) return;
+
+        if (!isLineLoginConfigured()) {
+          lineLoginBtn.hidden = true;
+          lineLinkStatus.textContent =
+            "（デモ）LINE連携は未設定です。本番では config.js に LINE_LOGIN_CHANNEL_ID を設定してください。";
+          return;
+        }
+
+        if (linkedLineUser) {
+          lineLoginBtn.hidden = true;
+          lineLinkStatus.textContent =
+            "LINE連携済み：" + (linkedLineUser.display_name || "ユーザー") +
+            " さん。準備完了の通知をお送りします。";
+          applyLineNameToForm(form, linkedLineUser);
+        } else {
+          lineLoginBtn.hidden = false;
+          lineLinkStatus.textContent =
+            "予約前に LINE と連携してください。準備完了の通知を LINE でお送りします。";
+        }
+      }
+
+      function startLineLogin() {
+        if (location.protocol === "file:") {
+          lineLinkStatus.textContent =
+            "file:// では LINE 連携できません。node preview-server.js でローカルサーバーを起動し、" +
+            location.origin + "/ から開いてください。";
+          return;
+        }
+        if (!isLineLoginConfigured()) {
+          lineLinkStatus.textContent = "LINE Login が未設定です。";
+          return;
+        }
+        const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
+        sessionStorage.setItem("hiro-line-oauth-state", state);
+        const params = new URLSearchParams({
+          response_type: "code",
+          client_id: cfg.LINE_LOGIN_CHANNEL_ID,
+          redirect_uri: getLineRedirectUri(),
+          state,
+          scope: "profile",
+        });
+        location.href = "https://access.line.me/oauth2/v2.1/authorize?" + params.toString();
+      }
+
+      if (lineLoginBtn) {
+        lineLoginBtn.addEventListener("click", startLineLogin);
+      }
+
+      if (location.hash === "#line-linked") {
+        applyLineNameToForm(form, loadLinkedLineUser(), { force: true });
+        history.replaceState(null, "", location.pathname + location.search + "#reserve");
+      } else if (location.hash === "#line-error") {
+        if (lineLinkStatus) {
+          lineLinkStatus.textContent =
+            "LINE連携に失敗しました。もう一度お試しください。";
+        }
+        history.replaceState(null, "", location.pathname + location.search + "#reserve");
+      }
+
+      updateLineLinkUi();
+
+      if (location.protocol === "file:" && lineLinkStatus) {
+        lineLinkStatus.textContent =
+          "⚠ ファイルを直接開いています。LINE 連携には Web サーバー経由でアクセスしてください。";
+      }
+
+      // Supabase クライアントを初期化（プレースホルダーの場合はデモモードに切り替え）
+      const demoStore = window.HIRO_DEMO_STORE;
+      const supabaseConfigured = demoStore && demoStore.isSupabaseConfigured(cfg);
+      let supabase = null;
+      try {
+        if (supabaseConfigured && window.supabase) {
+          supabase = window.supabase.createClient(
+            cfg.SUPABASE_URL,
+            cfg.SUPABASE_ANON_KEY,
+            {
+              auth: {
+                persistSession: false,
+                autoRefreshToken: false,
+                detectSessionInUrl: false,
+              },
+            }
+          );
+        }
+      } catch (e) {
+        console.error(e);
+      }
+
+      if (!supabase) {
+        console.info(
+          "[Hiro Coffee] Supabase 未設定のためデモモードで動作します。" +
+          "予約データはこのブラウザの localStorage に保存されます。"
+        );
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const fd = new FormData(form);
+        const reservation = {
+          name: String(fd.get("name") || "").trim(),
+          item: String(fd.get("item") || "").trim(),
+          time: String(fd.get("time") || "").trim(),
+          note: String(fd.get("note") || "").trim(),
+          status: "pending",
+        };
+
+        if (isLineLoginConfigured() && !linkedLineUser) {
+          noteEl.textContent = "予約前に「LINEと連携する」を押して、通知の受け取り設定をしてください。";
+          return;
+        }
+        if (linkedLineUser) {
+          reservation.line_user_id = linkedLineUser.line_user_id;
+        }
+
+        noteEl.textContent = "送信中…少々お待ちください。";
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+          if (!supabase) {
+            if (!demoStore) {
+              noteEl.textContent =
+                "予約システムの設定が未完了です。config.js の SUPABASE_URL / SUPABASE_ANON_KEY を設定してください。";
+              return;
+            }
+            await demoStore.insert(reservation);
+            noteEl.textContent =
+              "（デモモード）予約を受け付けました。準備ができたら管理画面から LINE 通知できます。";
+            sessionStorage.removeItem(LINE_USER_KEY);
+            updateLineLinkUi();
+            form.reset();
+            setDefaultPickupTime(form);
+            return;
+          }
+
+          const { error } = await supabase
+            .from("reservations")
+            .insert(reservation);
+
+          if (error) {
+            console.error(error);
+            noteEl.textContent =
+              "送信に失敗しました：" + (error.message || "もう一度お試しください。");
+          } else {
+            noteEl.textContent =
+              "ご予約ありがとうございます。商品のご用意ができ次第、LINE でお知らせします。";
+            sessionStorage.removeItem(LINE_USER_KEY);
+            updateLineLinkUi();
+            form.reset();
+            setDefaultPickupTime(form);
+          }
+        } catch (err) {
+          console.error(err);
+          if (err && (err.name === "TypeError" || String(err.message || "").indexOf("fetch") !== -1)) {
+            noteEl.textContent =
+              "通信エラーで送信できませんでした。config.js の SUPABASE_URL が正しいか、ネットワーク接続をご確認ください。";
+          } else {
+            noteEl.textContent =
+              "通信エラーで送信できませんでした：" + (err && err.message ? err.message : "もう一度お試しください。");
+          }
+        } finally {
+          if (submitBtn) submitBtn.disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

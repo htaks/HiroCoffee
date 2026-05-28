@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LINE連携中 - Hiro Coffee</title>
+  <script src="config.js"></script>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #fbf5ec;
+      color: #3f2f1e;
+    }
+  </style>
+</head>
+<body>
+  <p>LINE連携中です…</p>
+  <script>
+    (async () => {
+      const params = new URLSearchParams(location.search);
+      const code = params.get("code");
+      const state = params.get("state");
+      const oauthError = params.get("error");
+
+      function goBack(path) {
+        location.replace(new URL(path, location.href).href);
+      }
+
+      if (oauthError) {
+        sessionStorage.removeItem("hiro-line-oauth-state");
+        goBack("index.html#line-error");
+        return;
+      }
+
+      const savedState = sessionStorage.getItem("hiro-line-oauth-state");
+      sessionStorage.removeItem("hiro-line-oauth-state");
+      if (!code || !state || state !== savedState) {
+        console.error("[line-callback] invalid state or missing code", { code: !!code, state: !!state });
+        goBack("index.html#line-error");
+        return;
+      }
+
+      const cfg = window.HIRO_CONFIG || {};
+      const redirectUri = cfg.LINE_OAUTH_REDIRECT_URI ||
+        new URL("line-callback.html", location.href).href.split("?")[0];
+
+      try {
+        const res = await fetch(cfg.SUPABASE_URL + "/functions/v1/line-oauth", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + cfg.SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ code, redirect_uri: redirectUri }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "LINE連携に失敗しました");
+        }
+
+        sessionStorage.setItem("hiro-line-user", JSON.stringify({
+          line_user_id: data.line_user_id,
+          display_name: data.display_name || "",
+        }));
+        goBack("index.html#line-linked");
+      } catch (err) {
+        console.error(err);
+        goBack("index.html#line-error");
+      }
+    })();
+  </script>
+</body>
+</html>

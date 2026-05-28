@@ -1,0 +1,164 @@
+// ================================================================
+// Hiro Coffee - デモストア (Supabase 未設定時の擬似データストア)
+//
+// config.js の SUPABASE_URL / SUPABASE_ANON_KEY がプレースホルダー
+// (YOUR-PROJECT-ID 等) のままだと実通信ができないため、
+// localStorage を保存先とした擬似的な API を提供します。
+//
+// 公開 API:
+//   window.HIRO_DEMO_STORE.isSupabaseConfigured(cfg?) -> boolean
+//   window.HIRO_DEMO_STORE.listAll() -> Promise<Reservation[]>
+//   window.HIRO_DEMO_STORE.insert(record) -> Promise<Reservation>
+//   window.HIRO_DEMO_STORE.updateStatus(id, status) -> Promise<Reservation|null>
+//   window.HIRO_DEMO_STORE.remove(id) -> Promise<Reservation|null>
+//   window.HIRO_DEMO_STORE.onChange(cb) -> ()=>void  // 解除関数
+//
+// イベントの種類: "INSERT" | "UPDATE" | "DELETE" | "REFRESH"
+// ================================================================
+
+(function () {
+  const STORAGE_KEY = "hiro_demo_reservations";
+  const CHANNEL_NAME = "hiro-demo-store";
+
+  function read() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      console.warn("[demo-store] read failed", e);
+      return [];
+    }
+  }
+
+  function write(arr) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    } catch (e) {
+      console.warn("[demo-store] write failed", e);
+    }
+  }
+
+  function isPlaceholder(s) {
+    if (!s || typeof s !== "string") return true;
+    const t = s.trim();
+    if (!t) return true;
+    if (t.indexOf("YOUR-") !== -1) return true;
+    if (t.indexOf("YOUR_") !== -1) return true;
+    if (t.indexOf("REPLACE_") !== -1) return true;
+    if (t.indexOf("REPLACE-") !== -1) return true;
+    return false;
+  }
+
+  function isSupabaseConfigured(cfg) {
+    cfg = cfg || window.HIRO_CONFIG || {};
+    return !isPlaceholder(cfg.SUPABASE_URL) && !isPlaceholder(cfg.SUPABASE_ANON_KEY);
+  }
+
+  let broadcastChannel = null;
+  try {
+    if ("BroadcastChannel" in window) {
+      broadcastChannel = new BroadcastChannel(CHANNEL_NAME);
+    }
+  } catch (e) {
+    broadcastChannel = null;
+  }
+
+  function notify(event, payload) {
+    const detail = { event, payload };
+    try {
+      window.dispatchEvent(new CustomEvent("hiro-demo-store", { detail }));
+    } catch (e) {}
+    if (broadcastChannel) {
+      try { broadcastChannel.postMessage(detail); } catch (e) {}
+    }
+  }
+
+  async function listAll() {
+    const items = read();
+    items.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+    return items;
+  }
+
+  async function insert(record) {
+    record = record || {};
+    const items = read();
+    const row = {
+      id: "demo-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7),
+      created_at: new Date().toISOString(),
+      status: record.status || "pending",
+      name: String(record.name || ""),
+      item: String(record.item || ""),
+      time: String(record.time || ""),
+      note: String(record.note || ""),
+      line_user_id: record.line_user_id ? String(record.line_user_id) : "",
+      line_notified_at: record.line_notified_at || null,
+    };
+    items.push(row);
+    write(items);
+    notify("INSERT", row);
+    return row;
+  }
+
+  async function updateStatus(id, status) {
+    const items = read();
+    const i = items.findIndex((r) => String(r.id) === String(id));
+    if (i < 0) return null;
+    items[i].status = status;
+    write(items);
+    notify("UPDATE", items[i]);
+    return items[i];
+  }
+
+  async function remove(id) {
+    const items = read();
+    const i = items.findIndex((r) => String(r.id) === String(id));
+    if (i < 0) return null;
+    const removed = items.splice(i, 1)[0];
+    write(items);
+    notify("DELETE", removed);
+    return removed;
+  }
+
+  function onChange(cb) {
+    const localHandler = (e) => {
+      if (!e || !e.detail) return;
+      try { cb(e.detail.event, e.detail.payload); } catch (err) { console.error(err); }
+    };
+    window.addEventListener("hiro-demo-store", localHandler);
+
+    let bc = null;
+    try {
+      if ("BroadcastChannel" in window) {
+        bc = new BroadcastChannel(CHANNEL_NAME);
+        bc.onmessage = (ev) => {
+          if (!ev || !ev.data) return;
+          try { cb(ev.data.event, ev.data.payload); } catch (err) { console.error(err); }
+        };
+      }
+    } catch (e) { bc = null; }
+
+    const storageHandler = (ev) => {
+      if (ev.key === STORAGE_KEY) {
+        try { cb("REFRESH", null); } catch (err) { console.error(err); }
+      }
+    };
+    window.addEventListener("storage", storageHandler);
+
+    return function unsubscribe() {
+      window.removeEventListener("hiro-demo-store", localHandler);
+      window.removeEventListener("storage", storageHandler);
+      if (bc) { try { bc.close(); } catch (e) {} }
+    };
+  }
+
+  window.HIRO_DEMO_STORE = {
+    STORAGE_KEY,
+    isSupabaseConfigured,
+    listAll,
+    insert,
+    updateStatus,
+    remove,
+    onChange,
+  };
+})();
