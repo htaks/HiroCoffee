@@ -282,7 +282,7 @@
 
     <footer class="footer">
       <p>&copy; 2026 Hiro Coffee · Kyoto</p>
-      <p class="muted small"></p>
+      <p class="footer-version" id="siteVersion"></p>
     </footer>
   </div>
 
@@ -292,6 +292,14 @@
   </button>
 
   <script>
+    (function () {
+      const versionEl = document.getElementById("siteVersion");
+      const version = (window.HIRO_CONFIG || {}).SITE_VERSION;
+      if (versionEl && version) {
+        versionEl.textContent = "v" + version;
+      }
+    })();
+
     function go(id) {
       const el = document.getElementById(id);
       if (!el) return;

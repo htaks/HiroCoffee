@@ -23,4 +23,7 @@ window.HIRO_CONFIG = {
   // 本番: 空のまま（アクセス中のURLから自動判定）
   // ローカルで固定したい場合のみ例: "http://127.0.0.1:3000/line-callback.html"
   LINE_OAUTH_REDIRECT_URI: "",
+
+  // サイトのバージョン（フッターに表示）
+  SITE_VERSION: "1.0.1",
 };
