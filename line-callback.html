@@ -18,9 +18,27 @@
   </style>
 </head>
 <body>
-  <p>LINE連携中です…</p>
+  <p id="status">LINE連携中です…</p>
   <script>
     (async () => {
+      const LINE_USER_KEY = "hiro-line-user";
+      const LINE_STATE_KEY = "hiro-line-oauth-state";
+      const statusEl = document.getElementById("status");
+
+      function setLineStore(key, value) {
+        sessionStorage.setItem(key, value);
+        localStorage.setItem(key, value);
+      }
+
+      function getLineStore(key) {
+        return sessionStorage.getItem(key) || localStorage.getItem(key);
+      }
+
+      function removeLineStore(key) {
+        sessionStorage.removeItem(key);
+        localStorage.removeItem(key);
+      }
+
       const params = new URLSearchParams(location.search);
       const code = params.get("code");
       const state = params.get("state");
@@ -31,15 +49,19 @@
       }
 
       if (oauthError) {
-        sessionStorage.removeItem("hiro-line-oauth-state");
+        removeLineStore(LINE_STATE_KEY);
         goBack("index.html#line-error");
         return;
       }
 
-      const savedState = sessionStorage.getItem("hiro-line-oauth-state");
-      sessionStorage.removeItem("hiro-line-oauth-state");
+      const savedState = getLineStore(LINE_STATE_KEY);
+      removeLineStore(LINE_STATE_KEY);
       if (!code || !state || state !== savedState) {
-        console.error("[line-callback] invalid state or missing code", { code: !!code, state: !!state });
+        console.error("[line-callback] invalid state or missing code", {
+          code: !!code,
+          state: !!state,
+          savedState: !!savedState,
+        });
         goBack("index.html#line-error");
         return;
       }
@@ -62,13 +84,16 @@
           throw new Error(data.error || "LINE連携に失敗しました");
         }
 
-        sessionStorage.setItem("hiro-line-user", JSON.stringify({
+        setLineStore(LINE_USER_KEY, JSON.stringify({
           line_user_id: data.line_user_id,
           display_name: data.display_name || "",
         }));
         goBack("index.html#line-linked");
       } catch (err) {
         console.error(err);
+        if (statusEl) {
+          statusEl.textContent = "LINE連携に失敗しました。トップページに戻ります…";
+        }
         goBack("index.html#line-error");
       }
     })();

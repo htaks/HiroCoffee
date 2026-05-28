@@ -418,9 +418,25 @@
       });
 
       const LINE_USER_KEY = "hiro-line-user";
+      const LINE_STATE_KEY = "hiro-line-oauth-state";
       const lineLoginBtn = document.getElementById("lineLoginBtn");
       const lineLinkStatus = document.getElementById("lineLinkStatus");
       let linkedLineUser = null;
+
+      // iPhone では LINE アプリ経由の復帰で sessionStorage が消えることがあるため両方使う
+      function setLineStore(key, value) {
+        sessionStorage.setItem(key, value);
+        localStorage.setItem(key, value);
+      }
+
+      function getLineStore(key) {
+        return sessionStorage.getItem(key) || localStorage.getItem(key);
+      }
+
+      function removeLineStore(key) {
+        sessionStorage.removeItem(key);
+        localStorage.removeItem(key);
+      }
 
       function isLineLoginConfigured() {
         const channelId = String(cfg.LINE_LOGIN_CHANNEL_ID || "").trim();
@@ -436,7 +452,7 @@
 
       function loadLinkedLineUser() {
         try {
-          const raw = sessionStorage.getItem(LINE_USER_KEY);
+          const raw = getLineStore(LINE_USER_KEY);
           if (!raw) return null;
           const parsed = JSON.parse(raw);
           if (!parsed || !parsed.line_user_id) return null;
@@ -496,7 +512,7 @@
           return;
         }
         const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
-        sessionStorage.setItem("hiro-line-oauth-state", state);
+        setLineStore(LINE_STATE_KEY, state);
         const params = new URLSearchParams({
           response_type: "code",
           client_id: cfg.LINE_LOGIN_CHANNEL_ID,
@@ -511,18 +527,25 @@
         lineLoginBtn.addEventListener("click", startLineLogin);
       }
 
+      updateLineLinkUi();
+
       if (location.hash === "#line-linked") {
         applyLineNameToForm(form, loadLinkedLineUser(), { force: true });
+        if (lineLinkStatus) {
+          lineLinkStatus.textContent =
+            "LINE連携済み：" + ((loadLinkedLineUser() || {}).display_name || "ユーザー") +
+            " さん。準備完了の通知をお送りします。";
+        }
+        if (lineLoginBtn) lineLoginBtn.hidden = true;
         history.replaceState(null, "", location.pathname + location.search + "#reserve");
       } else if (location.hash === "#line-error") {
         if (lineLinkStatus) {
           lineLinkStatus.textContent =
-            "LINE連携に失敗しました。もう一度お試しください。";
+            "LINE連携に失敗しました。Safari で開き直して、もう一度お試しください。";
         }
+        if (lineLoginBtn) lineLoginBtn.hidden = false;
         history.replaceState(null, "", location.pathname + location.search + "#reserve");
       }
-
-      updateLineLinkUi();
 
       if (location.protocol === "file:" && lineLinkStatus) {
         lineLinkStatus.textContent =
