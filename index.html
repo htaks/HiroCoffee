@@ -29,15 +29,15 @@
           <span class="steam steam--3" aria-hidden="true"></span>
         </div>
       </div>
-      <h1>ほっとする、楽しいコーヒー時間。</h1>
+      <h1>笑顔がこぼれる、うれしいコーヒー時間。</h1>
       <p class="lead">
         手づくりシロップと、毎朝焙煎の豆。テイクアウトも店内も、笑顔になれる一杯を。
       </p>
       <div class="actions">
-        <button class="btn" type="button" onclick="go('reserve')">テイクアウト予約</button>
+        <button class="btn" type="button" onclick="go('reserve')">予約</button>
+        <button class="btn" type="button" onclick="go('about')">焙煎のこだわり</button>
         <button class="btn" type="button" onclick="go('location')">お店の場所</button>
         <button class="btn" type="button" onclick="go('hours')">営業時間</button>
-        <button class="btn" type="button" onclick="go('about')">焙煎のこだわり</button>
       </div>
     </header>
 
@@ -45,11 +45,13 @@
       <section id="menu" class="card">
         <h2>メニュー</h2>
         <p class="muted">カテゴリで絞り込みできます。</p>
-        <div class="chips" role="tablist" aria-label="メニューカテゴリ">
-          <button type="button" class="chip is-active" data-cat-btn="all" onclick="setCategory('all')">すべて</button>
-          <button type="button" class="chip" data-cat-btn="coffee" onclick="setCategory('coffee')">コーヒー</button>
-          <button type="button" class="chip" data-cat-btn="tea" onclick="setCategory('tea')">紅茶</button>
-          <button type="button" class="chip" data-cat-btn="sweet" onclick="setCategory('sweet')">甘いもの</button>
+        <div class="menu-filter-bar">
+          <div class="chips" role="tablist" aria-label="メニューカテゴリ">
+            <button type="button" class="chip is-active" data-cat-btn="all" onclick="setCategory('all')">すべて</button>
+            <button type="button" class="chip" data-cat-btn="coffee" onclick="setCategory('coffee')">コーヒー</button>
+            <button type="button" class="chip" data-cat-btn="tea" onclick="setCategory('tea')">紅茶</button>
+            <button type="button" class="chip" data-cat-btn="sweet" onclick="setCategory('sweet')">甘いもの</button>
+          </div>
         </div>
 
         <div class="menu-grid" aria-live="polite">
@@ -117,7 +119,7 @@
       </section>
 
       <section id="reserve" class="card">
-        <h2>テイクアウト予約</h2>
+        <h2>予約</h2>
         <p class="muted">
           下記フォームから予約できます。
         </p>
