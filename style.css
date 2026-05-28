@@ -1168,6 +1168,16 @@ input:focus, select:focus, textarea:focus {
   }
 }
 
+@media (max-width: 768px) {
+  .hero.reveal,
+  #menu.reveal,
+  #menu .menu-item.reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 .to-top {
   position: fixed;
   right: max(18px, calc(env(safe-area-inset-right) + 12px));
