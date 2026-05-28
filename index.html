@@ -35,8 +35,8 @@
       </p>
       <div class="actions">
         <button class="btn" type="button" onclick="go('reserve')">予約</button>
-        <button class="btn" type="button" onclick="go('about')">焙煎のこだわり</button>
-        <button class="btn" type="button" onclick="go('location')">お店の場所</button>
+        <button class="btn" type="button" onclick="go('location')">アクセス</button>
+        <button class="btn" type="button" onclick="go('about')">こだわり</button>
         <button class="btn" type="button" onclick="go('hours')">営業時間</button>
       </div>
     </header>
@@ -73,6 +73,12 @@
             <div class="menu-desc">湯気から立ちのぼるベリーと柑橘。すっと広がる、透明な甘み。</div>
             <div class="menu-price">¥480</div>
           </article>
+          <article class="menu-item" data-cat="coffee" tabindex="0">
+            <div class="menu-photo menu-photo--iced" aria-hidden="true"></div>
+            <div class="menu-title">アイス・コーヒー（浅煎り）</div>
+            <div class="menu-desc">氷が溶けるたびに香りがひらく。さわやさの奥に、フルーティな余韻。</div>
+            <div class="menu-price">¥500</div>
+          </article>
           <article class="menu-item" data-cat="tea" tabindex="0">
             <div class="menu-photo menu-photo--tea" aria-hidden="true"></div>
             <div class="menu-title">アールグレイ</div>
@@ -108,12 +114,6 @@
             <div class="menu-title">季節のパウンド</div>
             <div class="menu-desc">その季節だけの果実とバター。切った瞬間、あまい香りが広がる。</div>
             <div class="menu-price">¥580</div>
-          </article>
-          <article class="menu-item" data-cat="coffee" tabindex="0">
-            <div class="menu-photo menu-photo--iced" aria-hidden="true"></div>
-            <div class="menu-title">アイス・コーヒー（浅煎り）</div>
-            <div class="menu-desc">氷が溶けるたびに香りがひらく。さわやさの奥に、フルーティな余韻。</div>
-            <div class="menu-price">¥500</div>
           </article>
         </div>
       </section>
@@ -165,6 +165,13 @@
                 </span>
               </label>
               <label class="menu-picker-item">
+                <input type="checkbox" name="item" value="アイス・コーヒー（浅煎り）">
+                <span class="menu-picker-face">
+                  <img src="images/menu_iced.png" alt="" width="44" height="44" loading="lazy">
+                  <span class="menu-picker-label">アイス・コーヒー（浅煎り）</span>
+                </span>
+              </label>
+              <label class="menu-picker-item">
                 <input type="checkbox" name="item" value="アールグレイ">
                 <span class="menu-picker-face">
                   <img src="images/menu_tea.png" alt="" width="44" height="44" loading="lazy">
@@ -204,13 +211,6 @@
                 <span class="menu-picker-face">
                   <img src="images/menu_pound_cake.png" alt="" width="44" height="44" loading="lazy">
                   <span class="menu-picker-label">季節のパウンド</span>
-                </span>
-              </label>
-              <label class="menu-picker-item">
-                <input type="checkbox" name="item" value="アイス・コーヒー（浅煎り）">
-                <span class="menu-picker-face">
-                  <img src="images/menu_iced.png" alt="" width="44" height="44" loading="lazy">
-                  <span class="menu-picker-label">アイス・コーヒー（浅煎り）</span>
                 </span>
               </label>
             </div>
@@ -256,7 +256,7 @@
       </section>
 
       <section id="location" class="card">
-        <h2>お店の場所</h2>
+        <h2>アクセス</h2>
         <div class="two-col">
           <div>
             <div class="map" role="img" aria-label="東京都世田谷区松原2丁目45-1のGoogle Map">
@@ -270,7 +270,6 @@
             </div>
           </div>
           <div>
-            <h3 class="h3">アクセス</h3>
             <p class="muted">最寄り駅から徒歩3分</p>
             <ul class="list">
               <li>住所: 東京都世田谷区松原2丁目45-1</li>
