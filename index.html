@@ -232,13 +232,13 @@
               </span>
             </span>
             <div class="time-input-wrap">
-              <input name="time" type="time" class="time-input" required>
-              <button type="button" class="time-input-icon" id="pickupTimePickerBtn" aria-label="受け取り時間を選ぶ">
+              <input id="pickupTimeInput" name="time" type="time" class="time-input" required>
+              <label for="pickupTimeInput" class="time-input-icon" id="pickupTimePickerBtn" aria-label="受け取り時間を選ぶ">
                 <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
                   <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
                   <path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
                 </svg>
-              </button>
+              </label>
             </div>
           </label>
 
@@ -606,15 +606,43 @@
         });
       });
 
-      const pickupTimePickerBtn = document.getElementById("pickupTimePickerBtn");
-      if (pickupTimePickerBtn && form.time) {
-        pickupTimePickerBtn.addEventListener("click", () => {
-          if (typeof form.time.showPicker === "function") {
-            form.time.showPicker();
-          } else {
-            form.time.focus();
-            form.time.click();
+      function openPickupTimePicker() {
+        const timeInput = document.getElementById("pickupTimeInput");
+        if (!timeInput) return;
+        timeInput.focus({ preventScroll: true });
+        try {
+          if (typeof timeInput.showPicker === "function") {
+            timeInput.showPicker();
+            return;
           }
+        } catch (_) {}
+        setTimeout(() => {
+          try {
+            if (typeof timeInput.showPicker === "function") {
+              timeInput.showPicker();
+            }
+          } catch (_) {
+            timeInput.click();
+          }
+        }, 0);
+      }
+
+      const pickupTimePickerBtn = document.getElementById("pickupTimePickerBtn");
+      const pickupTimeInput = document.getElementById("pickupTimeInput");
+      if (pickupTimePickerBtn && pickupTimeInput) {
+        pickupTimePickerBtn.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          openPickupTimePicker();
+        });
+      }
+
+      const pickupTimeWrap = document.querySelector(".time-input-wrap");
+      if (pickupTimeWrap && pickupTimeInput) {
+        pickupTimeWrap.addEventListener("click", (event) => {
+          if (event.target === pickupTimeInput) return;
+          if (event.target.closest("#pickupTimePickerBtn")) return;
+          openPickupTimePicker();
         });
       }
 
