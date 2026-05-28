@@ -121,7 +121,7 @@
       <section id="reserve" class="card">
         <h2>テイクアウト予約</h2>
         <p class="muted">
-          下記フォームから予約できます。準備完了の通知は LINE でお送りします。
+          下記フォームから予約できます。
         </p>
 
         <div class="line-link-box" id="lineLinkBox">
@@ -520,7 +520,7 @@
           lineLoginBtn.hidden = true;
           lineLinkStatus.textContent =
             "LINE連携済み：" + (linkedLineUser.display_name || "ユーザー") +
-            " さん。準備完了の通知をお送りします。";
+            " さん。準備完了の通知はLINEでお知らせします。";
           applyLineNameToForm(form, linkedLineUser);
         } else {
           lineLoginBtn.hidden = false;
@@ -563,7 +563,7 @@
         if (lineLinkStatus) {
           lineLinkStatus.textContent =
             "LINE連携済み：" + ((loadLinkedLineUser() || {}).display_name || "ユーザー") +
-            " さん。準備完了の通知をお送りします。";
+            " さん。準備完了の通知はLINEでお知らせします。";
         }
         if (lineLoginBtn) lineLoginBtn.hidden = true;
         history.replaceState(null, "", location.pathname + location.search + "#reserve");
