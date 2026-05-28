@@ -46,6 +46,10 @@ Deno.serve(async (req) => {
     const item = String(body.item || "").trim();
     const time = String(body.time || "").trim();
     const note = String(body.note || "").trim();
+    const wantsBag = body.wants_bag === true ||
+      body.wants_bag === "true" ||
+      body.wants_bag === 1 ||
+      body.wants_bag === "1";
     const lineUserId = body.line_user_id
       ? String(body.line_user_id).trim()
       : "";
@@ -77,6 +81,7 @@ Deno.serve(async (req) => {
           item,
           time,
           note,
+          wants_bag: wantsBag,
           status: "pending",
           line_user_id: lineUserId || null,
           reservation_no: reservationNo,

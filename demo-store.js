@@ -116,6 +116,7 @@
       item: String(record.item || ""),
       time: String(record.time || ""),
       note: String(record.note || ""),
+      wants_bag: !!record.wants_bag,
       line_user_id: record.line_user_id ? String(record.line_user_id) : "",
       line_notified_at: record.line_notified_at || null,
     };

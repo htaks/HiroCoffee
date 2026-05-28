@@ -17,6 +17,7 @@ window.HIRO_CONFIG = {
   LINE_ADD_URL: "https://line.me/R/ti/p/@409azrvy",
 
   // LINE Login チャネルの Channel ID（Basic settings）
+  // ※ Messaging API チャネル（公式アカウント）と LINE Developers で「リンク」必須
   LINE_LOGIN_CHANNEL_ID: "2010226071",
 
   // OAuth コールバック URL
@@ -25,5 +26,5 @@ window.HIRO_CONFIG = {
   LINE_OAUTH_REDIRECT_URI: "",
 
   // サイトのバージョン（フッターに表示）
-  SITE_VERSION: "1.1.9",
+  SITE_VERSION: "1.2.0",
 };

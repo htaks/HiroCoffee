@@ -122,13 +122,15 @@
       </section>
 
       <section id="reserve" class="card">
-        <h2>予約</h2>
+        <h2>テイクアウト予約</h2>
         <p class="muted">
-          下記フォームから予約できます。
+          下記フォームからテイクアウト予約できます。
         </p>
 
         <div class="line-link-box" id="lineLinkBox">
           <button type="button" class="btn btn-line" id="lineLoginBtn">LINEと連携する（通知用）</button>
+          <a class="btn btn-line line-add-btn" id="lineAddBtn" href="#" target="_blank" rel="noopener noreferrer">Hiro Coffee を友だち追加</a>
+          <p class="line-link-note">連携のあと「友だち追加」をタップしてください。準備完了の通知は公式アカウントから届きます。</p>
           <div id="lineLinkStatus" class="line-link-status" role="status" aria-live="polite">
             <span class="line-link-status__icon" aria-hidden="true"></span>
             <p id="lineLinkStatusText" class="line-link-status__text"></p>
@@ -240,13 +242,20 @@
             </div>
           </label>
 
+          <div class="field-bag-option">
+            <label class="field-checkbox" for="wantsBagInput">
+              <input type="checkbox" name="wants_bag" id="wantsBagInput" value="1">
+              <span>手さげ袋が欲しい</span>
+            </label>
+          </div>
+
           <div class="field">
             <span>追加要望（任意）</span>
             <textarea name="note" rows="3" maxlength="200" placeholder="例：ミルク多めでお願いします" enterkeyhint="send"></textarea>
           </div>
 
           <div class="actions">
-            <button type="submit" class="btn btn-primary">予約する</button>
+            <button type="submit" class="btn btn-primary">テイクアウト予約する</button>
           </div>
 
           <p id="formNote" class="note" role="status" aria-live="polite"></p>
@@ -699,14 +708,14 @@
           lineLoginBtn.hidden = true;
           setLineLinkMessage(
             "LINE連携済み：" + (linkedLineUser.display_name || "ユーザー") +
-            " さん。準備完了の通知はLINEでお知らせします。",
+            " さん。友だち一覧に Hiro Coffee があるかもご確認ください。",
             true
           );
           applyLineNameToForm(form, linkedLineUser);
         } else {
           lineLoginBtn.hidden = false;
           setLineLinkMessage(
-            "予約前に LINE と連携してください。準備完了の通知を LINE でお送りします。",
+            "LINEでログインし、Hiro Coffee を友だち追加してください。",
             false
           );
         }
@@ -733,6 +742,7 @@
           redirect_uri: getLineRedirectUri(),
           state,
           scope: "profile",
+          bot_prompt: "aggressive",
         });
         location.href = "https://access.line.me/oauth2/v2.1/authorize?" + params.toString();
       }
@@ -747,7 +757,7 @@
         applyLineNameToForm(form, loadLinkedLineUser(), { force: true });
         setLineLinkMessage(
           "LINE連携済み：" + ((loadLinkedLineUser() || {}).display_name || "ユーザー") +
-          " さん。準備完了の通知はLINEでお知らせします。",
+          " さん。友だち一覧に Hiro Coffee がない場合は、下の「友だち追加」をタップしてください。",
           true
         );
         if (lineLoginBtn) lineLoginBtn.hidden = true;
@@ -803,6 +813,7 @@
           item: payload.item,
           time: payload.time,
           note: payload.note,
+          wants_bag: !!payload.wants_bag,
           line_user_id: payload.line_user_id || "",
         };
 
@@ -845,6 +856,7 @@
           item: selectedItems.join("、"),
           time: String(fd.get("time") || "").trim(),
           note: String(fd.get("note") || "").trim(),
+          wants_bag: fd.get("wants_bag") === "1",
           status: "pending",
         };
 

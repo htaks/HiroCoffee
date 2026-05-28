@@ -281,6 +281,17 @@
       color: #78350f;
       border: 1px solid rgba(120, 53, 15, 0.18);
     }
+    .bag-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      background: #fff7ed;
+      color: #9a3412;
+      border: 1px solid rgba(180, 83, 9, 0.25);
+    }
     .btn-notify-line {
       color: #78350f;
       border-color: rgba(120, 53, 15, 0.28);
@@ -543,6 +554,9 @@
         const toggleLabel = isDone ? "未対応に戻す" : "対応済みにする";
         const toggleAction = isDone ? "pending" : "done";
         const hasLine = !!r.line_user_id;
+        const bagBadge = r.wants_bag
+          ? '<span class="bag-badge">手さげ袋</span>'
+          : "";
         const lineBadge = hasLine
           ? (r.line_notified_at
             ? '<span class="line-badge line-badge--sent">LINE通知済</span>'
@@ -557,7 +571,7 @@
             '<div class="res-head">' +
               '<div>' +
                 '<div class="res-name-row">' +
-                  '<div class="res-name">' + escapeHtml(r.name) + ' 様 ' + lineBadge + '</div>' +
+                  '<div class="res-name">' + escapeHtml(r.name) + ' 様 ' + lineBadge + bagBadge + '</div>' +
                 '</div>' +
                 '<div class="res-meta">受付: ' + escapeHtml(fmtDate(r.created_at)) +
                   (r.line_notified_at ? ' · LINE通知: ' + escapeHtml(fmtDate(r.line_notified_at)) : '') +
@@ -571,6 +585,7 @@
                 : '') +
               '<dt>メニュー</dt><dd>' + formatMenuItems(r.item) + '</dd>' +
               '<dt>受取時間</dt><dd>' + escapeHtml(r.time) + '</dd>' +
+              '<dt>手さげ袋</dt><dd>' + (r.wants_bag ? '<strong>希望あり</strong>' : '不要') + '</dd>' +
               '<dt>追加要望</dt><dd>' + (r.note ? escapeHtml(r.note) : "（なし）") + '</dd>' +
             '</dl>' +
             '<div class="res-actions">' +
