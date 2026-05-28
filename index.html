@@ -263,11 +263,25 @@
           <div id="reservationSuccess" class="reservation-success" hidden>
             <p class="reservation-success__label">ご予約番号</p>
             <p class="reservation-success__no" id="reservationNoDisplay"></p>
+            <ul id="reservationBreakdownDisplay" class="order-breakdown" hidden></ul>
             <p class="reservation-success__total" id="reservationTotalDisplay"></p>
             <p class="reservation-success__hint">準備ができ次第、LINE でお知らせします。</p>
           </div>
         </form>
       </section>
+
+      <div id="reserveConfirmModal" class="reserve-modal" hidden aria-hidden="true">
+        <div class="reserve-modal__backdrop" id="reserveConfirmBackdrop"></div>
+        <div class="reserve-modal__panel" role="dialog" aria-modal="true" aria-labelledby="reserveConfirmTitle">
+          <h3 id="reserveConfirmTitle" class="reserve-modal__title">ご注文内容の確認</h3>
+          <ul id="reserveConfirmBreakdown" class="order-breakdown"></ul>
+          <p class="reserve-modal__total" id="reserveConfirmTotal"></p>
+          <div class="reserve-modal__actions">
+            <button type="button" class="btn" id="reserveConfirmCancel">戻る</button>
+            <button type="button" class="btn btn-primary" id="reserveConfirmSubmit">予約を確定する</button>
+          </div>
+        </div>
+      </div>
 
       <section id="location" class="card">
         <h2>アクセス</h2>
@@ -571,8 +585,16 @@
       const menuPickerField = document.getElementById("menuPickerField");
       const reservationSuccessEl = document.getElementById("reservationSuccess");
       const reservationNoDisplayEl = document.getElementById("reservationNoDisplay");
+      const reservationBreakdownEl = document.getElementById("reservationBreakdownDisplay");
       const reservationTotalDisplayEl = document.getElementById("reservationTotalDisplay");
+      const reserveConfirmModal = document.getElementById("reserveConfirmModal");
+      const reserveConfirmBackdrop = document.getElementById("reserveConfirmBackdrop");
+      const reserveConfirmBreakdown = document.getElementById("reserveConfirmBreakdown");
+      const reserveConfirmTotal = document.getElementById("reserveConfirmTotal");
+      const reserveConfirmCancel = document.getElementById("reserveConfirmCancel");
+      const reserveConfirmSubmit = document.getElementById("reserveConfirmSubmit");
       const menuPrices = window.HIRO_MENU_PRICES;
+      let pendingReservation = null;
       setDefaultPickupTime(form);
 
       form.querySelectorAll('input[name="item"]').forEach((input) => {
@@ -588,24 +610,94 @@
           .filter(Boolean);
       }
 
+      function escapeHtml(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function renderBreakdown(container, breakdown) {
+        if (!container || !breakdown || !menuPrices) return;
+        if (!breakdown.lines.length) {
+          container.innerHTML = "";
+          container.hidden = true;
+          return;
+        }
+        container.innerHTML = breakdown.lines.map((line) => (
+          '<li class="order-breakdown__item">' +
+            '<span class="order-breakdown__name">' + escapeHtml(line.name) + '</span>' +
+            '<span class="order-breakdown__price">' + menuPrices.formatYen(line.price) + '</span>' +
+          '</li>'
+        )).join("");
+        container.hidden = false;
+      }
+
       function hideReservationSuccess() {
         if (reservationSuccessEl) reservationSuccessEl.hidden = true;
         if (reservationNoDisplayEl) reservationNoDisplayEl.textContent = "";
+        if (reservationBreakdownEl) {
+          reservationBreakdownEl.innerHTML = "";
+          reservationBreakdownEl.hidden = true;
+        }
         if (reservationTotalDisplayEl) reservationTotalDisplayEl.textContent = "";
       }
 
-      function showReservationSuccess(reservationNo, totalAmount) {
+      function showReservationSuccess(reservationNo, breakdown) {
         if (!reservationNo) {
           hideReservationSuccess();
           return;
         }
         if (reservationNoDisplayEl) reservationNoDisplayEl.textContent = reservationNo;
-        if (reservationTotalDisplayEl && menuPrices) {
+        renderBreakdown(reservationBreakdownEl, breakdown);
+        if (reservationTotalDisplayEl && menuPrices && breakdown) {
           reservationTotalDisplayEl.textContent =
-            "合計金額 " + menuPrices.formatYen(totalAmount);
+            "合計金額 " + menuPrices.formatYen(breakdown.total);
         }
         if (reservationSuccessEl) reservationSuccessEl.hidden = false;
       }
+
+      function openConfirmModal(breakdown) {
+        if (!reserveConfirmModal || !breakdown) return;
+        renderBreakdown(reserveConfirmBreakdown, breakdown);
+        if (reserveConfirmTotal && menuPrices) {
+          reserveConfirmTotal.textContent = "合計金額 " + menuPrices.formatYen(breakdown.total);
+        }
+        reserveConfirmModal.hidden = false;
+        reserveConfirmModal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("modal-open");
+        if (reserveConfirmSubmit) reserveConfirmSubmit.focus();
+      }
+
+      function closeConfirmModal() {
+        if (!reserveConfirmModal) return;
+        reserveConfirmModal.hidden = true;
+        reserveConfirmModal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("modal-open");
+        pendingReservation = null;
+      }
+
+      if (reserveConfirmCancel) {
+        reserveConfirmCancel.addEventListener("click", closeConfirmModal);
+      }
+      if (reserveConfirmBackdrop) {
+        reserveConfirmBackdrop.addEventListener("click", closeConfirmModal);
+      }
+      if (reserveConfirmSubmit) {
+        reserveConfirmSubmit.addEventListener("click", () => {
+          if (!pendingReservation) return;
+          const reservation = pendingReservation;
+          closeConfirmModal();
+          submitReservation(reservation);
+        });
+      }
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && reserveConfirmModal && !reserveConfirmModal.hidden) {
+          closeConfirmModal();
+        }
+      });
 
       document.querySelectorAll("[data-offset-min]").forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -919,20 +1011,20 @@
         return { data, error: null };
       }
 
-      form.addEventListener("submit", async (e) => {
+      form.addEventListener("submit", (e) => {
         e.preventDefault();
 
-        const submitBtn = form.querySelector('button[type="submit"]');
         const fd = new FormData(form);
         const selectedItems = getSelectedMenuItems(form);
+        const wantsBag = fd.get("wants_bag") === "1";
         const reservation = {
           name: String(fd.get("name") || "").trim(),
           item: selectedItems.join("、"),
           time: String(fd.get("time") || "").trim(),
           note: String(fd.get("note") || "").trim(),
-          wants_bag: fd.get("wants_bag") === "1",
+          wants_bag: wantsBag,
           total_amount: menuPrices
-            ? menuPrices.calcTotalFromItems(selectedItems, fd.get("wants_bag") === "1")
+            ? menuPrices.calcTotalFromItems(selectedItems, wantsBag)
             : 0,
           status: "pending",
         };
@@ -952,6 +1044,20 @@
           reservation.line_user_id = linkedLineUser.line_user_id;
         }
 
+        noteEl.textContent = "";
+        const breakdown = menuPrices
+          ? menuPrices.buildBreakdownFromItems(selectedItems, wantsBag)
+          : { lines: [], total: reservation.total_amount };
+        pendingReservation = reservation;
+        openConfirmModal(breakdown);
+      });
+
+      async function submitReservation(reservation) {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const breakdown = menuPrices
+          ? menuPrices.buildBreakdownFromItemString(reservation.item, reservation.wants_bag)
+          : { lines: [], total: reservation.total_amount };
+
         noteEl.textContent = "送信中…少々お待ちください。";
         hideReservationSuccess();
         if (submitBtn) submitBtn.disabled = true;
@@ -965,7 +1071,7 @@
             }
             const row = await demoStore.insert(reservation);
             noteEl.textContent = "（デモモード）ご予約を受け付けました。";
-            showReservationSuccess(row.reservation_no, row.total_amount);
+            showReservationSuccess(row.reservation_no, breakdown);
             updateLineLinkUi();
             form.reset();
             setDefaultPickupTime(form);
@@ -981,10 +1087,10 @@
               "送信に失敗しました：" + (error.message || "もう一度お試しください。");
           } else {
             noteEl.textContent = "ご予約ありがとうございます。";
-            const totalAmount = data && data.total_amount != null
-              ? data.total_amount
-              : reservation.total_amount;
-            showReservationSuccess(data && data.reservation_no, totalAmount);
+            if (data && data.total_amount != null && menuPrices) {
+              breakdown.total = data.total_amount;
+            }
+            showReservationSuccess(data && data.reservation_no, breakdown);
             updateLineLinkUi();
             form.reset();
             setDefaultPickupTime(form);
@@ -1002,7 +1108,7 @@
         } finally {
           if (submitBtn) submitBtn.disabled = false;
         }
-      });
+      }
     });
   </script>
 </body>

@@ -36,6 +36,29 @@
     return calcTotalFromItemString(list.join("、"), wantsBag);
   }
 
+  function buildBreakdownFromItems(items, wantsBag) {
+    const list = Array.isArray(items) ? items : [];
+    const lines = [];
+    for (const name of list) {
+      const trimmed = String(name || "").trim();
+      if (!trimmed) continue;
+      lines.push({ name: trimmed, price: PRICES[trimmed] || 0 });
+    }
+    if (wantsBag) {
+      lines.push({ name: "手さげ袋", price: BAG_FEE });
+    }
+    const total = lines.reduce((sum, line) => sum + line.price, 0);
+    return { lines, total };
+  }
+
+  function buildBreakdownFromItemString(itemStr, wantsBag) {
+    const items = String(itemStr || "")
+      .split("、")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return buildBreakdownFromItems(items, wantsBag);
+  }
+
   function formatYen(amount) {
     return "¥" + Number(amount || 0).toLocaleString("ja-JP");
   }
@@ -45,6 +68,8 @@
     BAG_FEE,
     calcTotalFromItemString,
     calcTotalFromItems,
+    buildBreakdownFromItems,
+    buildBreakdownFromItemString,
     formatYen,
   };
 })();
