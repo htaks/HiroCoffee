@@ -19,6 +19,7 @@
   <script src="demo-store.js"></script>
 </head>
 <body>
+  <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
   <div class="wrap">
     <header class="hero">
       <div class="hero-head">
@@ -272,11 +273,10 @@
             </div>
           </div>
           <div>
-            <p class="muted">最寄り駅から徒歩3分</p>
+            <p class="muted">明大前駅から徒歩3分</p>
             <ul class="list">
               <li>住所: 東京都世田谷区松原2丁目45-1</li>
               <li>電話: <a class="tel-link" href="tel:00012345678">000&#8209;1234&#8209;5678</a></li>
-              <li>営業時間内はテイクアウトOK</li>
             </ul>
             <div class="actions">
               <button
@@ -292,7 +292,21 @@
       <section id="hours" class="card two-col">
         <div>
           <h2>営業時間</h2>
-          <p class="muted">混雑しがちな時間は早めの予約がおすすめです。</p>
+          <p class="muted">混雑しがちな時間は、テイクアウト予約がおすすめです。</p>
+          <div class="hours-busy">
+            <h3 class="h3">混雑しがちな時間</h3>
+            <ul class="hours-busy-list">
+              <li>
+                <span class="hours-busy-day">平日</span>
+                <span class="hours-busy-time">9:00〜10:30 / 12:00〜13:00</span>
+              </li>
+              <li>
+                <span class="hours-busy-day">土日祝</span>
+                <span class="hours-busy-time">11:00〜13:00 / 15:00〜16:30</span>
+              </li>
+            </ul>
+            <p class="hours-busy-note">※状況により前後することがあります。</p>
+          </div>
         </div>
         <div>
           <table class="table" aria-label="営業時間">
@@ -325,7 +339,7 @@
         </p>
         <div class="about-features">
           <article class="about-feature about-feature--roast">
-            <div class="about-feature__icon" aria-hidden="true">☕</div>
+            <div class="about-feature__photo about-feature__photo--roast" role="img" aria-label="朝の焙煎風景"></div>
             <h3 class="h3">毎朝焙煎</h3>
             <p class="about-feature__lead">
               開店前の静かな時間に、その日の一杯から豆を仕込みます。
@@ -338,7 +352,7 @@
             </ul>
           </article>
           <article class="about-feature about-feature--syrup">
-            <div class="about-feature__icon" aria-hidden="true">🍯</div>
+            <div class="about-feature__photo about-feature__photo--syrup" role="img" aria-label="手づくりシロップの仕込み"></div>
             <h3 class="h3">手づくりシロップ</h3>
             <p class="about-feature__lead">
               ラテやカフェオレに合わせるシロップは、店内で少量ずつ仕込んでいます。
@@ -426,11 +440,12 @@
     function initScrollReveal() {
       const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const targets = document.querySelectorAll(
-        ".hero, .card, .menu-item, .footer"
+        ".hero, .card, .menu-item, .about-feature, .footer"
       );
 
       if (reduceMotion || !("IntersectionObserver" in window)) {
         targets.forEach((el) => el.classList.add("reveal", "is-visible"));
+        document.documentElement.classList.add("reveal-ready");
         return;
       }
 
@@ -438,17 +453,25 @@
       targets.forEach((el) => {
         el.classList.add("reveal");
         if (el.classList.contains("hero")) {
-          el.classList.add("reveal--drop");
+          el.classList.add("reveal--hero");
         } else if (el.classList.contains("footer")) {
-          el.classList.add("reveal--pop");
+          el.classList.add("reveal--fade");
         } else if (el.classList.contains("menu-item")) {
-          el.classList.add(menuIdx % 2 === 0 ? "reveal--left" : "reveal--right");
-          el.style.setProperty("--reveal-delay", (menuIdx % 6) * 70 + "ms");
+          el.classList.add(menuIdx % 2 === 0 ? "reveal--from-left" : "reveal--from-right");
+          el.style.setProperty("--reveal-delay", (menuIdx % 8) * 65 + "ms");
           menuIdx++;
+        } else if (el.classList.contains("about-feature")) {
+          el.classList.add("reveal--lift");
+          el.style.setProperty("--reveal-delay", el.matches(":nth-child(2)") ? "110ms" : "0ms");
         } else {
-          el.classList.add("reveal--zoom");
+          el.classList.add("reveal--section");
         }
       });
+
+      function isInViewport(el) {
+        const rect = el.getBoundingClientRect();
+        return rect.top < window.innerHeight * 0.94 && rect.bottom > 0;
+      }
 
       const io = new IntersectionObserver(
         (entries) => {
@@ -459,18 +482,69 @@
             }
           });
         },
-        { threshold: 0.08, rootMargin: "0px 0px 0px 0px" }
+        { threshold: 0.1, rootMargin: "0px 0px -5% 0px" }
       );
 
-      targets.forEach((el) => io.observe(el));
-
-      [
-        document.querySelector(".hero"),
-        document.getElementById("menu"),
-        ...document.querySelectorAll("#menu .menu-item"),
-      ].forEach((el) => {
-        if (el) el.classList.add("is-visible");
+      targets.forEach((el) => {
+        if (isInViewport(el)) {
+          el.classList.add("is-visible");
+        } else {
+          io.observe(el);
+        }
       });
+
+      const hero = document.querySelector(".hero");
+      if (hero && !hero.classList.contains("is-visible")) {
+        requestAnimationFrame(() => hero.classList.add("is-visible"));
+      }
+
+      document.documentElement.classList.add("reveal-ready");
+    }
+
+    function initScrollProgress() {
+      const bar = document.getElementById("scrollProgress");
+      if (!bar) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        bar.hidden = true;
+        return;
+      }
+
+      function update() {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = height > 0 ? Math.min(1, scrollTop / height) : 0;
+        bar.style.transform = "scaleX(" + progress + ")";
+      }
+
+      window.addEventListener("scroll", update, { passive: true });
+      update();
+    }
+
+    function initParallaxPhotos() {
+      const photos = document.querySelectorAll(".menu-photo, .about-feature__photo");
+      if (!photos.length) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      let ticking = false;
+      function update() {
+        const vh = window.innerHeight;
+        photos.forEach((photo) => {
+          const rect = photo.getBoundingClientRect();
+          if (rect.bottom < 0 || rect.top > vh) return;
+          const center = rect.top + rect.height / 2;
+          const offset = (center - vh / 2) / vh;
+          photo.style.setProperty("--parallax-y", (offset * -16) + "px");
+        });
+        ticking = false;
+      }
+
+      window.addEventListener("scroll", () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(update);
+        }
+      }, { passive: true });
+      update();
     }
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -478,6 +552,8 @@
       updateToTopVisibility();
       window.addEventListener("scroll", updateToTopVisibility, { passive: true });
       initScrollReveal();
+      initScrollProgress();
+      initParallaxPhotos();
 
       const form = document.getElementById("reserveForm");
       const noteEl = document.getElementById("formNote");
