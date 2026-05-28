@@ -131,6 +131,33 @@
     }
     .res-grid dd { margin: 0 0 4px 0; line-height: 1.6; }
 
+    .res-name-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    .res-no-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: #78350f;
+      background: #fffaf3;
+      border: 1px solid rgba(120, 53, 15, 0.22);
+      font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    }
+    .res-no {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      color: #78350f;
+      font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    }
+
     .res-actions {
       display: flex;
       flex-wrap: wrap;
@@ -529,13 +556,19 @@
           ? '<button class="btn btn-notify-line" data-action="notify-line">準備完了・LINE通知</button>'
           : "";
 
+        const resNoBadge = r.reservation_no
+          ? '<span class="res-no-badge">No. ' + escapeHtml(r.reservation_no) + '</span>'
+          : "";
+
         return (
           '<article class="res-item ' + (isDone ? "res-item--done" : "") + '" data-id="' + escapeHtml(r.id) + '">' +
             '<div class="res-head">' +
               '<div>' +
-                '<div class="res-name">' + escapeHtml(r.name) + ' 様 ' + lineBadge + '</div>' +
+                '<div class="res-name-row">' +
+                  '<div class="res-name">' + escapeHtml(r.name) + ' 様 ' + lineBadge + '</div>' +
+                  resNoBadge +
+                '</div>' +
                 '<div class="res-meta">受付: ' + escapeHtml(fmtDate(r.created_at)) +
-                  (r.reservation_no ? ' · 予約番号: ' + escapeHtml(r.reservation_no) : '') +
                   (r.line_notified_at ? ' · LINE通知: ' + escapeHtml(fmtDate(r.line_notified_at)) : '') +
                 '</div>' +
               '</div>' +

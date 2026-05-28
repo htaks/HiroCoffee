@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
       `${reservation.name} 様\n\n` +
       `Hiro Coffee です。\n` +
       (reservation.reservation_no
-        ? `ご予約番号: ${reservation.reservation_no}\n`
+        ? `ご予約番号: ${reservation.reservation_no}\n\n`
         : "") +
       `ご予約の「${reservation.item}」のご用意ができました。\n` +
       `受け取り時間: ${reservation.time}\n\n` +
