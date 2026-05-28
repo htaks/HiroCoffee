@@ -162,23 +162,29 @@ h1, h2, .hero h1, .card h2 {
 
   .hero {
     padding-right: 12px;
+    padding-top: 4px;
+    padding-bottom: 10px;
     display: block;
     background: #fbf5ec;
   }
 
   .hero-head {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 2px;
     min-width: 0;
     background: transparent;
+    text-align: center;
   }
 
   .hero-top {
     position: static;
     margin-bottom: 0;
     flex: 0 0 auto;
-    width: auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
     background: transparent;
   }
 
@@ -197,9 +203,9 @@ h1, h2, .hero h1, .card h2 {
 
   .brand-logo {
     display: block;
-    height: 172px;
-    width: auto;
-    max-width: 172px;
+    width: 100%;
+    height: auto;
+    max-width: none;
     object-fit: contain;
     background: transparent;
     -webkit-mask-image: none;
@@ -210,12 +216,13 @@ h1, h2, .hero h1, .card h2 {
   .steam { display: none; }
 
   .hero h1 {
-    flex: 1 1 auto;
-    min-width: 0;
+    width: 100%;
     margin: 0;
-    font-size: clamp(11.5px, 3.6vw, 16px);
-    line-height: 1.38;
+    font-size: clamp(14px, 4.4vw, 19px);
+    line-height: 1.35;
     letter-spacing: 0.03em;
+    text-align: center;
+    white-space: nowrap;
     word-break: normal;
     overflow-wrap: normal;
   }
@@ -243,8 +250,7 @@ h1, h2, .hero h1, .card h2 {
 
 @media (min-width: 390px) and (max-width: 480px) {
   .hero h1 {
-    font-size: clamp(17px, 4.9vw, 22px);
-    line-height: 1.32;
+    font-size: clamp(16px, 4.8vw, 21px);
     letter-spacing: 0.04em;
   }
 }
@@ -277,11 +283,6 @@ h1, h2, .hero h1, .card h2 {
   line-height: 1.35;
   word-break: keep-all;
   overflow-wrap: break-word;
-}
-
-.hero-title-line {
-  display: block;
-  white-space: nowrap;
 }
 
 .lead {
@@ -1336,7 +1337,7 @@ input:focus, select:focus, textarea:focus {
   .main-grid { gap: 10px; }
 
   .hero {
-    padding: 10px 12px 12px;
+    padding: 4px 8px 10px;
     border-radius: var(--radius);
   }
 
@@ -1392,8 +1393,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (max-width: 360px) {
-  .brand-logo { height: 150px; max-width: 150px; }
-  .hero h1 { font-size: clamp(11px, 3.4vw, 13.5px); letter-spacing: 0.02em; }
+  .hero h1 { font-size: clamp(13px, 4.1vw, 16px); letter-spacing: 0.02em; }
   .hero .actions .btn { font-size: 9.5px; padding: 4px 2px; min-height: 32px; }
 }
 
