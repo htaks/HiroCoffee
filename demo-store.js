@@ -80,11 +80,36 @@
     return items;
   }
 
+  function getJstDayKey(date) {
+    date = date || new Date();
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Tokyo",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(date);
+    const month = parts.find((p) => p.type === "month").value;
+    const day = parts.find((p) => p.type === "day").value;
+    return month + day;
+  }
+
+  function nextReservationNo(items) {
+    const dayKey = getJstDayKey();
+    let max = 0;
+    for (const row of items) {
+      const no = String(row.reservation_no || "");
+      if (!no.startsWith(dayKey + "-")) continue;
+      const seq = parseInt(no.split("-")[1], 10);
+      if (seq > max) max = seq;
+    }
+    return dayKey + "-" + String(max + 1).padStart(3, "0");
+  }
+
   async function insert(record) {
     record = record || {};
     const items = read();
     const row = {
       id: "demo-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7),
+      reservation_no: record.reservation_no || nextReservationNo(items),
       created_at: new Date().toISOString(),
       status: record.status || "pending",
       name: String(record.name || ""),

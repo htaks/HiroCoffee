@@ -535,12 +535,16 @@
               '<div>' +
                 '<div class="res-name">' + escapeHtml(r.name) + ' 様 ' + lineBadge + '</div>' +
                 '<div class="res-meta">受付: ' + escapeHtml(fmtDate(r.created_at)) +
+                  (r.reservation_no ? ' · 予約番号: ' + escapeHtml(r.reservation_no) : '') +
                   (r.line_notified_at ? ' · LINE通知: ' + escapeHtml(fmtDate(r.line_notified_at)) : '') +
                 '</div>' +
               '</div>' +
               '<span class="status-badge ' + badgeClass + '">' + badgeText + '</span>' +
             '</div>' +
             '<dl class="res-grid">' +
+              (r.reservation_no
+                ? '<dt>予約番号</dt><dd><strong class="res-no">' + escapeHtml(r.reservation_no) + '</strong></dd>'
+                : '') +
               '<dt>メニュー</dt><dd>' + escapeHtml(r.item) + '</dd>' +
               '<dt>受取時間</dt><dd>' + escapeHtml(r.time) + '</dd>' +
               '<dt>メモ</dt><dd>' + (r.note ? escapeHtml(r.note) : "（なし）") + '</dd>' +

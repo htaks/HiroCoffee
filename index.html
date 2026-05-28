@@ -179,6 +179,11 @@
           </div>
 
           <p id="formNote" class="note" role="status" aria-live="polite"></p>
+          <div id="reservationSuccess" class="reservation-success" hidden>
+            <p class="reservation-success__label">ご予約番号</p>
+            <p class="reservation-success__no" id="reservationNoDisplay"></p>
+            <p class="reservation-success__hint">準備ができ次第、LINE でお知らせします。</p>
+          </div>
         </form>
       </section>
 
@@ -396,7 +401,23 @@
 
       const form = document.getElementById("reserveForm");
       const noteEl = document.getElementById("formNote");
+      const reservationSuccessEl = document.getElementById("reservationSuccess");
+      const reservationNoDisplayEl = document.getElementById("reservationNoDisplay");
       setDefaultPickupTime(form);
+
+      function hideReservationSuccess() {
+        if (reservationSuccessEl) reservationSuccessEl.hidden = true;
+        if (reservationNoDisplayEl) reservationNoDisplayEl.textContent = "";
+      }
+
+      function showReservationSuccess(reservationNo) {
+        if (!reservationNo) {
+          hideReservationSuccess();
+          return;
+        }
+        if (reservationNoDisplayEl) reservationNoDisplayEl.textContent = reservationNo;
+        if (reservationSuccessEl) reservationSuccessEl.hidden = false;
+      }
 
       document.querySelectorAll("[data-offset-min]").forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -611,6 +632,7 @@
         }
 
         noteEl.textContent = "送信中…少々お待ちください。";
+        hideReservationSuccess();
         if (submitBtn) submitBtn.disabled = true;
 
         try {
@@ -620,28 +642,30 @@
                 "予約システムの設定が未完了です。config.js の SUPABASE_URL / SUPABASE_ANON_KEY を設定してください。";
               return;
             }
-            await demoStore.insert(reservation);
-            noteEl.textContent =
-              "（デモモード）予約を受け付けました。準備ができたら管理画面から LINE 通知できます。";
-            sessionStorage.removeItem(LINE_USER_KEY);
+            const row = await demoStore.insert(reservation);
+            noteEl.textContent = "（デモモード）ご予約を受け付けました。";
+            showReservationSuccess(row.reservation_no);
+            removeLineStore(LINE_USER_KEY);
             updateLineLinkUi();
             form.reset();
             setDefaultPickupTime(form);
             return;
           }
 
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from("reservations")
-            .insert(reservation);
+            .insert(reservation)
+            .select("reservation_no")
+            .single();
 
           if (error) {
             console.error(error);
             noteEl.textContent =
               "送信に失敗しました：" + (error.message || "もう一度お試しください。");
           } else {
-            noteEl.textContent =
-              "ご予約ありがとうございます。商品のご用意ができ次第、LINE でお知らせします。";
-            sessionStorage.removeItem(LINE_USER_KEY);
+            noteEl.textContent = "ご予約ありがとうございます。";
+            showReservationSuccess(data && data.reservation_no);
+            removeLineStore(LINE_USER_KEY);
             updateLineLinkUi();
             form.reset();
             setDefaultPickupTime(form);
