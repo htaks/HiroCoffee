@@ -610,6 +610,55 @@
         );
       }
 
+      function getJstDayKey(date) {
+        date = date || new Date();
+        const parts = new Intl.DateTimeFormat("en-US", {
+          timeZone: "Asia/Tokyo",
+          month: "2-digit",
+          day: "2-digit",
+        }).formatToParts(date);
+        return parts.find((p) => p.type === "month").value +
+          parts.find((p) => p.type === "day").value;
+      }
+
+      async function createReservationNo(client) {
+        const dayKey = getJstDayKey();
+        if (client) {
+          try {
+            const { data, error } = await client
+              .from("reservations")
+              .select("reservation_no")
+              .like("reservation_no", dayKey + "-%");
+            if (!error && data) {
+              let max = 0;
+              for (const row of data) {
+                const seq = parseInt(String(row.reservation_no || "").split("-")[1], 10);
+                if (seq > max) max = seq;
+              }
+              return dayKey + "-" + String(max + 1).padStart(3, "0");
+            }
+          } catch (err) {
+            console.warn("[reserve] reservation_no lookup failed", err);
+          }
+        }
+        return dayKey + "-" + String(Date.now() % 1000).padStart(3, "0");
+      }
+
+      async function insertReservation(client, payload) {
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const reservationNo = await createReservationNo(client);
+          const { data, error } = await client
+            .from("reservations")
+            .insert({ ...payload, reservation_no: reservationNo })
+            .select("reservation_no")
+            .single();
+          if (!error) return { data, error: null };
+          if (error.code === "23505" && attempt < 2) continue;
+          return { data: null, error };
+        }
+        return { data: null, error: { message: "予約番号の発行に失敗しました" } };
+      }
+
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -652,11 +701,7 @@
             return;
           }
 
-          const { data, error } = await supabase
-            .from("reservations")
-            .insert(reservation)
-            .select("reservation_no")
-            .single();
+          const { data, error } = await insertReservation(supabase, reservation);
 
           if (error) {
             console.error(error);

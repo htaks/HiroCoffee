@@ -1,9 +1,4 @@
--- 予約番号（MMDD-連番 例: 0529-001）を自動発行
-
-ALTER TABLE public.reservations
-ADD COLUMN IF NOT EXISTS reservation_no text UNIQUE;
-
-COMMENT ON COLUMN public.reservations.reservation_no IS 'お客様向け予約番号（JST の MMDD-連番）';
+-- reservation_no_counters を使わず、reservations から連番を採番（RLS 問題を回避）
 
 CREATE OR REPLACE FUNCTION public.assign_reservation_no()
 RETURNS trigger
@@ -36,8 +31,5 @@ $$;
 
 ALTER FUNCTION public.assign_reservation_no() OWNER TO postgres;
 
-DROP TRIGGER IF EXISTS trg_assign_reservation_no ON public.reservations;
-CREATE TRIGGER trg_assign_reservation_no
-  BEFORE INSERT ON public.reservations
-  FOR EACH ROW
-  EXECUTE FUNCTION public.assign_reservation_no();
+-- 内部用カウンター表は不要（残っていても使わない）
+DROP TABLE IF EXISTS public.reservation_no_counters;
