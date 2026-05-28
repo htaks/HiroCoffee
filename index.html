@@ -18,8 +18,41 @@
   <script src="config.js"></script>
   <script src="menu-prices.js"></script>
   <script src="demo-store.js"></script>
+  <script src="reservation-history.js"></script>
 </head>
 <body>
+  <header class="site-header">
+    <button
+      type="button"
+      class="site-header__menu-btn"
+      id="siteMenuBtn"
+      aria-label="メニューを開く"
+      aria-expanded="false"
+      aria-controls="siteNavDrawer"
+    >
+      <span class="site-header__menu-icon" aria-hidden="true"></span>
+    </button>
+    <span class="site-header__title">Hiro Coffee</span>
+  </header>
+
+  <nav id="siteNavDrawer" class="site-nav" hidden aria-hidden="true">
+    <div class="site-nav__backdrop" id="siteNavBackdrop"></div>
+    <div class="site-nav__panel" role="dialog" aria-modal="true" aria-labelledby="siteNavTitle">
+      <div class="site-nav__head">
+        <h2 id="siteNavTitle" class="site-nav__title">メニュー</h2>
+        <button type="button" class="site-nav__close" id="siteNavClose" aria-label="メニューを閉じる">×</button>
+      </div>
+      <ul class="site-nav__list">
+        <li><button type="button" class="site-nav__link" data-nav-go="menu">メニュー</button></li>
+        <li><button type="button" class="site-nav__link" data-nav-go="reserve">テイクアウト予約</button></li>
+        <li><button type="button" class="site-nav__link" data-nav-go="order-history">注文履歴</button></li>
+        <li><button type="button" class="site-nav__link" data-nav-go="location">アクセス</button></li>
+        <li><button type="button" class="site-nav__link" data-nav-go="hours">営業時間</button></li>
+        <li><button type="button" class="site-nav__link" data-nav-go="about">焙煎のこだわり</button></li>
+      </ul>
+    </div>
+  </nav>
+
   <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
   <div class="wrap">
     <header class="hero">
@@ -260,14 +293,14 @@
           </div>
 
           <p id="formNote" class="note" role="status" aria-live="polite"></p>
-          <div id="reservationSuccess" class="reservation-success" hidden>
-            <p class="reservation-success__label">ご予約番号</p>
-            <p class="reservation-success__no" id="reservationNoDisplay"></p>
-            <ul id="reservationBreakdownDisplay" class="order-breakdown" hidden></ul>
-            <p class="reservation-success__total" id="reservationTotalDisplay"></p>
-            <p class="reservation-success__hint">準備ができ次第、LINE でお知らせします。</p>
-          </div>
         </form>
+      </section>
+
+      <section id="order-history" class="card">
+        <h2>注文履歴</h2>
+        <p class="muted" id="orderHistoryNote">LINE連携後、ご注文の履歴を確認できます。</p>
+        <div id="orderHistoryEmpty" class="order-history-empty" hidden>まだ注文履歴はありません。</div>
+        <div id="orderHistoryList" class="reservation-history__list"></div>
       </section>
 
       <div id="reserveConfirmModal" class="reserve-modal" hidden aria-hidden="true">
@@ -278,7 +311,7 @@
           <p class="reserve-modal__total" id="reserveConfirmTotal"></p>
           <div class="reserve-modal__actions">
             <button type="button" class="btn" id="reserveConfirmCancel">戻る</button>
-            <button type="button" class="btn btn-primary" id="reserveConfirmSubmit">予約を確定する</button>
+            <button type="button" class="btn btn-primary" id="reserveConfirmSubmit">予約確定</button>
           </div>
         </div>
       </div>
@@ -414,10 +447,52 @@
     })();
 
     function go(id) {
+      closeSiteNav();
       const el = document.getElementById(id);
       if (!el) return;
       el.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+
+    function openSiteNav() {
+      const drawer = document.getElementById("siteNavDrawer");
+      const btn = document.getElementById("siteMenuBtn");
+      if (!drawer) return;
+      drawer.hidden = false;
+      drawer.setAttribute("aria-hidden", "false");
+      if (btn) btn.setAttribute("aria-expanded", "true");
+      document.body.classList.add("site-nav-open");
+    }
+
+    function closeSiteNav() {
+      const drawer = document.getElementById("siteNavDrawer");
+      const btn = document.getElementById("siteMenuBtn");
+      if (!drawer) return;
+      drawer.hidden = true;
+      drawer.setAttribute("aria-hidden", "true");
+      if (btn) btn.setAttribute("aria-expanded", "false");
+      document.body.classList.remove("site-nav-open");
+    }
+
+    (function initSiteNav() {
+      const btn = document.getElementById("siteMenuBtn");
+      const closeBtn = document.getElementById("siteNavClose");
+      const backdrop = document.getElementById("siteNavBackdrop");
+      if (btn) btn.addEventListener("click", openSiteNav);
+      if (closeBtn) closeBtn.addEventListener("click", closeSiteNav);
+      if (backdrop) backdrop.addEventListener("click", closeSiteNav);
+      document.querySelectorAll("[data-nav-go]").forEach((link) => {
+        link.addEventListener("click", () => {
+          const target = link.getAttribute("data-nav-go");
+          if (target) go(target);
+        });
+      });
+      document.addEventListener("keydown", (event) => {
+        const drawer = document.getElementById("siteNavDrawer");
+        if (event.key === "Escape" && drawer && !drawer.hidden) {
+          closeSiteNav();
+        }
+      });
+    })();
 
     function scrollToTop() {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -583,10 +658,10 @@
       const form = document.getElementById("reserveForm");
       const noteEl = document.getElementById("formNote");
       const menuPickerField = document.getElementById("menuPickerField");
-      const reservationSuccessEl = document.getElementById("reservationSuccess");
-      const reservationNoDisplayEl = document.getElementById("reservationNoDisplay");
-      const reservationBreakdownEl = document.getElementById("reservationBreakdownDisplay");
-      const reservationTotalDisplayEl = document.getElementById("reservationTotalDisplay");
+      const orderHistoryNoteEl = document.getElementById("orderHistoryNote");
+      const orderHistoryEmptyEl = document.getElementById("orderHistoryEmpty");
+      const orderHistoryListEl = document.getElementById("orderHistoryList");
+      const historyStore = window.HIRO_RESERVATION_HISTORY;
       const reserveConfirmModal = document.getElementById("reserveConfirmModal");
       const reserveConfirmBackdrop = document.getElementById("reserveConfirmBackdrop");
       const reserveConfirmBreakdown = document.getElementById("reserveConfirmBreakdown");
@@ -635,28 +710,142 @@
         container.hidden = false;
       }
 
-      function hideReservationSuccess() {
-        if (reservationSuccessEl) reservationSuccessEl.hidden = true;
-        if (reservationNoDisplayEl) reservationNoDisplayEl.textContent = "";
-        if (reservationBreakdownEl) {
-          reservationBreakdownEl.innerHTML = "";
-          reservationBreakdownEl.hidden = true;
-        }
-        if (reservationTotalDisplayEl) reservationTotalDisplayEl.textContent = "";
+      function renderBreakdownHtml(breakdown) {
+        if (!breakdown || !breakdown.lines.length || !menuPrices) return "";
+        return breakdown.lines.map((line) => (
+          '<li class="order-breakdown__item">' +
+            '<span class="order-breakdown__name">' + escapeHtml(line.name) + '</span>' +
+            '<span class="order-breakdown__price">' + menuPrices.formatYen(line.price) + '</span>' +
+          '</li>'
+        )).join("");
       }
 
-      function showReservationSuccess(reservationNo, breakdown) {
-        if (!reservationNo) {
-          hideReservationSuccess();
+      function formatCustomerStatus(status) {
+        if (status === "handed_over") {
+          return { label: "お渡し済み", className: "order-status--handed-over" };
+        }
+        if (status === "done") {
+          return { label: "準備完了", className: "order-status--done" };
+        }
+        return { label: "準備中", className: "order-status--pending" };
+      }
+
+      function renderOrderHistory() {
+        const user = loadLinkedLineUser();
+        const lineUserId = user && user.line_user_id;
+        if (!orderHistoryListEl || !historyStore) return;
+
+        if (!lineUserId) {
+          if (orderHistoryNoteEl) {
+            orderHistoryNoteEl.textContent = "LINE連携後、ご注文の履歴を確認できます。";
+            orderHistoryNoteEl.hidden = false;
+          }
+          orderHistoryListEl.innerHTML = "";
+          if (orderHistoryEmptyEl) orderHistoryEmptyEl.hidden = true;
           return;
         }
-        if (reservationNoDisplayEl) reservationNoDisplayEl.textContent = reservationNo;
-        renderBreakdown(reservationBreakdownEl, breakdown);
-        if (reservationTotalDisplayEl && menuPrices && breakdown) {
-          reservationTotalDisplayEl.textContent =
-            "合計金額 " + menuPrices.formatYen(breakdown.total);
+
+        const items = historyStore.read(lineUserId);
+        if (orderHistoryNoteEl) {
+          orderHistoryNoteEl.textContent = items.length
+            ? "これまでのご注文一覧です。"
+            : "まだ注文履歴はありません。テイクアウト予約するとここに表示されます。";
+          orderHistoryNoteEl.hidden = false;
         }
-        if (reservationSuccessEl) reservationSuccessEl.hidden = false;
+
+        if (!items.length) {
+          orderHistoryListEl.innerHTML = "";
+          if (orderHistoryEmptyEl) orderHistoryEmptyEl.hidden = false;
+          return;
+        }
+
+        if (orderHistoryEmptyEl) orderHistoryEmptyEl.hidden = true;
+        orderHistoryListEl.innerHTML = items.map((entry) => {
+          const breakdown = menuPrices
+            ? menuPrices.buildBreakdownFromItemString(entry.item, entry.wants_bag)
+            : { lines: [], total: entry.total_amount || 0 };
+          if (entry.total_amount != null) breakdown.total = entry.total_amount;
+          const status = formatCustomerStatus(entry.status || "pending");
+          const itemClass = entry.status === "handed_over"
+            ? " reservation-history__item--handed-over"
+            : "";
+          return (
+            '<article class="reservation-history__item' + itemClass + '">' +
+              '<div class="reservation-history__head">' +
+                '<p class="reservation-history__label">ご予約番号</p>' +
+                '<span class="order-status ' + status.className + '">' + escapeHtml(status.label) + '</span>' +
+              '</div>' +
+              '<p class="reservation-history__no">' + escapeHtml(entry.reservation_no || "") + '</p>' +
+              '<ul class="order-breakdown">' + renderBreakdownHtml(breakdown) + '</ul>' +
+              '<p class="reservation-history__total">合計金額 ' + menuPrices.formatYen(breakdown.total) + '</p>' +
+              '<p class="reservation-history__meta">受取 ' + escapeHtml(entry.time || "") + '</p>' +
+            '</article>'
+          );
+        }).join("");
+      }
+
+      function addReservationToHistory(data, reservation) {
+        const user = loadLinkedLineUser();
+        if (!historyStore || !user || !user.line_user_id || !data || !data.id) return;
+        historyStore.addEntry(user.line_user_id, {
+          id: data.id,
+          reservation_no: data.reservation_no,
+          item: reservation.item,
+          time: reservation.time,
+          wants_bag: reservation.wants_bag,
+          total_amount: data.total_amount != null ? data.total_amount : reservation.total_amount,
+          status: "pending",
+          created_at: new Date().toISOString(),
+        });
+        renderOrderHistory();
+      }
+
+      async function syncReservationHistory() {
+        const user = loadLinkedLineUser();
+        const lineUserId = user && user.line_user_id;
+        if (!historyStore || !lineUserId) {
+          renderOrderHistory();
+          return;
+        }
+        const items = historyStore.read(lineUserId);
+        const ids = items.map((row) => row.id).filter(Boolean);
+        if (!ids.length) {
+          renderOrderHistory();
+          return;
+        }
+
+        try {
+          if (!supabase && demoStore) {
+            const all = await demoStore.listAll();
+            const statusRows = all
+              .filter((row) => ids.includes(String(row.id)))
+              .map((row) => ({ id: row.id, status: row.status || "pending" }));
+            historyStore.mergeStatuses(lineUserId, statusRows);
+          } else if (supabase && cfg) {
+            const res = await fetch(cfg.SUPABASE_URL + "/functions/v1/sync-reservation-history", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + cfg.SUPABASE_ANON_KEY,
+              },
+              body: JSON.stringify({ line_user_id: lineUserId, ids }),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              historyStore.mergeStatuses(lineUserId, Array.isArray(data) ? data : []);
+            }
+          }
+        } catch (err) {
+          console.warn("[Hiro Coffee] reservation history sync failed", err);
+        }
+        renderOrderHistory();
+      }
+
+      let historySyncTimer = null;
+      function startHistorySync() {
+        syncReservationHistory();
+        if (historySyncTimer) clearInterval(historySyncTimer);
+        historySyncTimer = setInterval(syncReservationHistory, 20000);
       }
 
       function openConfirmModal(breakdown) {
@@ -872,6 +1061,7 @@
             false
           );
         }
+        renderOrderHistory();
       }
 
       function startLineLogin() {
@@ -1054,12 +1244,8 @@
 
       async function submitReservation(reservation) {
         const submitBtn = form.querySelector('button[type="submit"]');
-        const breakdown = menuPrices
-          ? menuPrices.buildBreakdownFromItemString(reservation.item, reservation.wants_bag)
-          : { lines: [], total: reservation.total_amount };
 
         noteEl.textContent = "送信中…少々お待ちください。";
-        hideReservationSuccess();
         if (submitBtn) submitBtn.disabled = true;
 
         try {
@@ -1071,11 +1257,12 @@
             }
             const row = await demoStore.insert(reservation);
             noteEl.textContent = "（デモモード）ご予約を受け付けました。";
-            showReservationSuccess(row.reservation_no, breakdown);
+            addReservationToHistory(row, reservation);
             updateLineLinkUi();
             form.reset();
             setDefaultPickupTime(form);
             applyLineNameToForm(form, loadLinkedLineUser());
+            go("order-history");
             return;
           }
 
@@ -1087,14 +1274,12 @@
               "送信に失敗しました：" + (error.message || "もう一度お試しください。");
           } else {
             noteEl.textContent = "ご予約ありがとうございます。";
-            if (data && data.total_amount != null && menuPrices) {
-              breakdown.total = data.total_amount;
-            }
-            showReservationSuccess(data && data.reservation_no, breakdown);
+            addReservationToHistory(data, reservation);
             updateLineLinkUi();
             form.reset();
             setDefaultPickupTime(form);
             applyLineNameToForm(form, loadLinkedLineUser());
+            go("order-history");
           }
         } catch (err) {
           console.error(err);
@@ -1108,6 +1293,19 @@
         } finally {
           if (submitBtn) submitBtn.disabled = false;
         }
+      }
+
+      startHistorySync();
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+          syncReservationHistory();
+        }
+      });
+      if (demoStore && demoStore.onChange) {
+        demoStore.onChange(() => syncReservationHistory());
+      }
+      if (historyStore && historyStore.onChange) {
+        historyStore.onChange(() => renderOrderHistory());
       }
     });
   </script>

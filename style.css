@@ -45,6 +45,169 @@ body {
   overflow-x: hidden;
 }
 
+body.site-nav-open,
+body.modal-open {
+  overflow: hidden;
+}
+
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding:
+    max(8px, env(safe-area-inset-top))
+    max(12px, env(safe-area-inset-right))
+    8px
+    max(12px, env(safe-area-inset-left));
+  background: rgba(251, 245, 236, 0.94);
+  border-bottom: 1px solid rgba(120, 53, 15, 0.12);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 18px rgba(45, 32, 20, 0.06);
+}
+
+.site-header__menu-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(120, 53, 15, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.site-header__menu-icon,
+.site-header__menu-icon::before,
+.site-header__menu-icon::after {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--primary2);
+}
+
+.site-header__menu-icon {
+  position: relative;
+}
+
+.site-header__menu-icon::before,
+.site-header__menu-icon::after {
+  content: "";
+  position: absolute;
+  left: 0;
+}
+
+.site-header__menu-icon::before { top: -6px; }
+.site-header__menu-icon::after { top: 6px; }
+
+.site-header__title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--primary2);
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+}
+
+.site-nav {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+}
+
+.site-nav[hidden] {
+  display: none;
+}
+
+.site-nav__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(45, 32, 20, 0.42);
+  backdrop-filter: blur(2px);
+}
+
+.site-nav__panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(100%, 320px);
+  height: 100%;
+  padding:
+    max(12px, env(safe-area-inset-top))
+    16px
+    max(16px, env(safe-area-inset-bottom));
+  overflow: auto;
+  background: linear-gradient(180deg, #fffdf9, #fdf8f0);
+  border-right: 1px solid rgba(120, 53, 15, 0.14);
+  box-shadow: 12px 0 32px rgba(45, 32, 20, 0.12);
+}
+
+.site-nav__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.site-nav__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary2);
+}
+
+.site-nav__close {
+  appearance: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(120, 53, 15, 0.08);
+  color: var(--primary2);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.site-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.site-nav__link {
+  appearance: none;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid rgba(120, 53, 15, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.site-nav__link:active {
+  background: rgba(251, 245, 236, 0.95);
+}
+
 h1, h2, .hero h1, .card h2 {
   font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
   letter-spacing: 0.08em;
@@ -55,6 +218,7 @@ h1, h2, .hero h1, .card h2 {
   margin: 0 auto;
   display: grid;
   gap: 18px;
+  padding-top: calc(52px + max(8px, env(safe-area-inset-top)));
 }
 
 .hero {
@@ -310,6 +474,7 @@ h1, h2, .hero h1, .card h2 {
 
 .card {
   position: relative;
+  scroll-margin-top: calc(64px + max(8px, env(safe-area-inset-top)));
   background: #fdfaf3;
   border: 1px solid rgba(99, 73, 47, 0.18);
   border-radius: 16px;
@@ -437,6 +602,15 @@ h1, h2, .hero h1, .card h2 {
     rgba(159, 18, 57, 0.68) 0%,
     rgba(159, 18, 57, 0.4) 70%,
     rgba(159, 18, 57, 0) 100%
+  );
+}
+
+#order-history.card h2::after {
+  background: linear-gradient(
+    90deg,
+    rgba(120, 53, 15, 0.72) 0%,
+    rgba(120, 53, 15, 0.42) 70%,
+    rgba(120, 53, 15, 0) 100%
   );
 }
 
@@ -1512,6 +1686,112 @@ body.modal-open {
   font-size: 13px;
   color: var(--muted);
   line-height: 1.6;
+}
+
+.reservation-history {
+  margin-top: 18px;
+}
+
+.reservation-history__heading {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary2);
+}
+
+.reservation-history__list {
+  display: grid;
+  gap: 12px;
+}
+
+.reservation-history__item {
+  padding: 16px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffaf3, #fdf6ec);
+  border: 1px solid rgba(120, 53, 15, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.reservation-history__item--handed-over {
+  opacity: 0.82;
+}
+
+.reservation-history__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.order-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.order-status--pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.order-status--done {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.order-status--handed-over {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.order-history-empty {
+  margin: 0;
+  padding: 18px 14px;
+  border-radius: 12px;
+  text-align: center;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px dashed rgba(120, 53, 15, 0.16);
+}
+
+.reservation-history__label {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+
+.reservation-history__no {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--primary2);
+  text-align: center;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+}
+
+.reservation-history__total {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(120, 53, 15, 0.14);
+  font-size: 17px;
+  font-weight: 700;
+  text-align: right;
+  color: var(--text);
+}
+
+.reservation-history__meta {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .reveal {

@@ -78,6 +78,7 @@
       border-color: rgba(120, 53, 15, 0.32);
     }
     .res-item--done { opacity: 0.7; }
+    .res-item--handed-over { opacity: 0.55; }
 
     .res-head {
       display: flex;
@@ -116,6 +117,17 @@
       background: #dcfce7;
       color: #166534;
       border: 1px solid #86efac;
+    }
+    .status-badge--handed-over {
+      background: #f3f4f6;
+      color: #4b5563;
+      border: 1px solid #d1d5db;
+    }
+
+    .btn-handed-over {
+      background: #fff;
+      border: 1px solid #9ca3af;
+      color: #374151;
     }
 
     .res-grid {
@@ -374,6 +386,7 @@
       <div class="stats" id="stats">
         <span class="stat">未対応 <strong id="statPending">0</strong></span>
         <span class="stat">対応済み <strong id="statDone">0</strong></span>
+        <span class="stat">お渡し済み <strong id="statHandedOver">0</strong></span>
         <span class="stat">合計 <strong id="statTotal">0</strong></span>
       </div>
 
@@ -382,6 +395,7 @@
           <button type="button" class="chip is-active" data-filter="all">すべて</button>
           <button type="button" class="chip" data-filter="pending">未対応</button>
           <button type="button" class="chip" data-filter="done">対応済み</button>
+          <button type="button" class="chip" data-filter="handed_over">お渡し済み</button>
         </div>
       </div>
 
@@ -558,8 +572,10 @@
 
       const pending = allReservations.filter((r) => r.status === "pending").length;
       const done = allReservations.filter((r) => r.status === "done").length;
+      const handedOver = allReservations.filter((r) => r.status === "handed_over").length;
       document.getElementById("statPending").textContent = pending;
       document.getElementById("statDone").textContent = done;
+      document.getElementById("statHandedOver").textContent = handedOver;
       document.getElementById("statTotal").textContent = allReservations.length;
 
       if (list.length === 0) {
@@ -569,9 +585,12 @@
       }
 
       resList.innerHTML = list.map((r) => {
+        const isHandedOver = r.status === "handed_over";
         const isDone = r.status === "done";
-        const badgeClass = isDone ? "status-badge--done" : "status-badge--pending";
-        const badgeText = isDone ? "対応済み" : "未対応";
+        const badgeClass = isHandedOver
+          ? "status-badge--handed-over"
+          : (isDone ? "status-badge--done" : "status-badge--pending");
+        const badgeText = isHandedOver ? "お渡し済み" : (isDone ? "対応済み" : "未対応");
         const toggleLabel = isDone ? "未対応に戻す" : "対応済みにする";
         const toggleAction = isDone ? "pending" : "done";
         const hasLine = !!r.line_user_id;
@@ -583,12 +602,21 @@
             ? '<span class="line-badge line-badge--sent">LINE通知済</span>'
             : '<span class="line-badge line-badge--ok">LINE連携済</span>')
           : '<span class="line-badge line-badge--ng">LINE未連携</span>';
-        const notifyBtn = (!isDone && hasLine)
+        const notifyBtn = (!isDone && !isHandedOver && hasLine)
           ? '<button class="btn btn-notify-line" data-action="notify-line">準備完了・LINE通知</button>'
           : "";
+        const handedOverBtn = !isHandedOver
+          ? '<button class="btn btn-handed-over" data-action="handed-over">お渡し済み</button>'
+          : "";
+        const toggleBtn = !isHandedOver
+          ? '<button class="btn btn-primary" data-action="toggle" data-next="' + toggleAction + '">' + toggleLabel + '</button>'
+          : "";
+        const itemClass = isHandedOver
+          ? "res-item--handed-over"
+          : (isDone ? "res-item--done" : "");
 
         return (
-          '<article class="res-item ' + (isDone ? "res-item--done" : "") + '" data-id="' + escapeHtml(r.id) + '">' +
+          '<article class="res-item ' + itemClass + '" data-id="' + escapeHtml(r.id) + '">' +
             '<div class="res-head">' +
               '<div>' +
                 '<div class="res-name-row">' +
@@ -612,7 +640,8 @@
             '</dl>' +
             '<div class="res-actions">' +
               notifyBtn +
-              '<button class="btn btn-primary" data-action="toggle" data-next="' + toggleAction + '">' + toggleLabel + '</button>' +
+              handedOverBtn +
+              toggleBtn +
               '<button class="btn btn-danger" data-action="delete">削除</button>' +
             '</div>' +
           '</article>'
@@ -661,7 +690,11 @@
         const r = allReservations.find((x) => String(x.id) === String(id));
         if (r) r.status = status;
         render();
-        showToast(status === "done" ? "対応済みに変更しました" : "未対応に戻しました");
+        showToast(
+          status === "handed_over"
+            ? "お渡し済みにしました（注文履歴のステータスが更新されます）"
+            : (status === "done" ? "対応済みに変更しました" : "未対応に戻しました")
+        );
         return;
       }
       if (!supabaseClient) return;
@@ -676,7 +709,18 @@
       const r = allReservations.find((x) => String(x.id) === String(id));
       if (r) r.status = status;
       render();
-      showToast(status === "done" ? "対応済みに変更しました" : "未対応に戻しました");
+      showToast(
+        status === "handed_over"
+          ? "お渡し済みにしました（注文履歴のステータスが更新されます）"
+          : (status === "done" ? "対応済みに変更しました" : "未対応に戻しました")
+      );
+    }
+
+    async function markHandedOver(id) {
+      const r = allReservations.find((x) => String(x.id) === String(id));
+      if (!r || r.status === "handed_over") return;
+      if (!confirm(r.name + " 様の予約をお渡し済みにしますか？\nお客様の注文履歴に「お渡し済み」と表示されます。")) return;
+      await updateStatus(id, "handed_over");
     }
 
     async function notifyLineReady(id) {
@@ -777,6 +821,8 @@
         updateStatus(id, next);
       } else if (action === "notify-line") {
         notifyLineReady(id);
+      } else if (action === "handed-over") {
+        markHandedOver(id);
       } else if (action === "delete") {
         deleteRow(id);
       }
