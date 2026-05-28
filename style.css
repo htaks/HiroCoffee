@@ -9,6 +9,7 @@
   --ring: rgba(180, 83, 9, 0.25);
   --border: #e5e7eb;
   --radius: 18px;
+  --site-header-height: 52px;
 }
 
 * { box-sizing: border-box; }
@@ -26,7 +27,7 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   padding:
-    max(28px, env(safe-area-inset-top))
+    0
     max(16px, env(safe-area-inset-right))
     max(48px, env(safe-area-inset-bottom))
     max(16px, env(safe-area-inset-left));
@@ -236,7 +237,7 @@ h1, h2, .hero h1, .card h2 {
   margin: 0 auto;
   display: grid;
   gap: 18px;
-  padding-top: calc(52px + max(8px, env(safe-area-inset-top)));
+  padding-top: calc(var(--site-header-height) + env(safe-area-inset-top, 0px) + 8px);
 }
 
 .hero {
@@ -492,7 +493,7 @@ h1, h2, .hero h1, .card h2 {
 
 .card {
   position: relative;
-  scroll-margin-top: calc(64px + max(8px, env(safe-area-inset-top)));
+  scroll-margin-top: calc(var(--site-header-height) + env(safe-area-inset-top, 0px) + 12px);
   background: #fdfaf3;
   border: 1px solid rgba(99, 73, 47, 0.18);
   border-radius: 16px;
@@ -654,7 +655,7 @@ h2 {
 
 #menu .menu-filter-bar {
   position: sticky;
-  top: max(4px, env(safe-area-inset-top));
+  top: calc(var(--site-header-height) + env(safe-area-inset-top, 0px));
   z-index: 8;
   margin: 0 0 12px;
   padding: 6px 0 10px;
@@ -1714,7 +1715,7 @@ body.modal-open {
 
 #activeOrderHistory {
   margin-top: 18px;
-  scroll-margin-top: calc(64px + max(8px, env(safe-area-inset-top)));
+  scroll-margin-top: calc(var(--site-header-height) + env(safe-area-inset-top, 0px) + 12px);
 }
 
 .order-history-page .actions {
@@ -1888,11 +1889,11 @@ body.modal-open {
 
 .scroll-progress {
   position: fixed;
-  top: 0;
+  top: calc(var(--site-header-height) + env(safe-area-inset-top, 0px));
   left: 0;
   right: 0;
   height: 3px;
-  z-index: 100;
+  z-index: 901;
   transform: scaleX(0);
   transform-origin: left center;
   background: linear-gradient(90deg, var(--primary), #d97706, var(--primary2));
@@ -1993,7 +1994,7 @@ body.modal-open {
 
 @media (max-width: 480px) {
   body {
-    padding-top: max(12px, env(safe-area-inset-top));
+    padding-top: 0;
     padding-left: max(12px, env(safe-area-inset-left));
     padding-right: max(12px, env(safe-area-inset-right));
     padding-bottom: max(72px, calc(env(safe-area-inset-bottom) + 56px));
@@ -2033,7 +2034,7 @@ body.modal-open {
   }
 
   #menu .menu-filter-bar {
-    top: max(2px, env(safe-area-inset-top));
+    top: calc(var(--site-header-height) + env(safe-area-inset-top, 0px));
     padding: 4px 0 8px;
     margin-bottom: 10px;
   }

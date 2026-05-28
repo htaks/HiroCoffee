@@ -14,6 +14,13 @@
   <link rel="icon" href="images/hiro_coffee_logo.png">
   <title>Hiro Coffee - 京都の楽しいコーヒー時間</title>
   <link rel="stylesheet" href="style.css">
+  <script>
+    (function () {
+      if (location.hash === "#reserve") {
+        history.replaceState(null, "", location.pathname + location.search);
+      }
+    })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
   <script src="menu-prices.js"></script>
@@ -1017,7 +1024,8 @@
           setLineFriendAddVisible(false);
         }
         if (lineLoginBtn) lineLoginBtn.hidden = true;
-        history.replaceState(null, "", location.pathname + location.search + "#reserve");
+        history.replaceState(null, "", location.pathname + location.search);
+        window.scrollTo(0, 0);
       } else if (location.hash === "#line-error") {
         setLineLinkMessage(
           "LINE連携に失敗しました。Safari で開き直して、もう一度お試しください。",
@@ -1025,7 +1033,13 @@
         );
         if (lineLoginBtn) lineLoginBtn.hidden = false;
         setLineFriendAddVisible(true);
-        history.replaceState(null, "", location.pathname + location.search + "#reserve");
+        history.replaceState(null, "", location.pathname + location.search);
+        window.scrollTo(0, 0);
+      }
+
+      if (location.hash === "#reserve") {
+        history.replaceState(null, "", location.pathname + location.search);
+        window.scrollTo(0, 0);
       }
 
       if (location.protocol === "file:" && lineLinkStatusText) {
@@ -1164,7 +1178,6 @@
             form.reset();
             setDefaultPickupTime(form);
             applyLineNameToForm(form, loadLinkedLineUser());
-            go("activeOrderHistory");
             return;
           }
 
@@ -1181,7 +1194,6 @@
             form.reset();
             setDefaultPickupTime(form);
             applyLineNameToForm(form, loadLinkedLineUser());
-            go("activeOrderHistory");
           }
         } catch (err) {
           console.error(err);
