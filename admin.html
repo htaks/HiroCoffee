@@ -555,7 +555,7 @@
         const toggleAction = isDone ? "pending" : "done";
         const hasLine = !!r.line_user_id;
         const bagBadge = r.wants_bag
-          ? '<span class="bag-badge">手さげ袋</span>'
+          ? '<span class="bag-badge">手さげ袋希望</span>'
           : "";
         const lineBadge = hasLine
           ? (r.line_notified_at
@@ -585,7 +585,7 @@
                 : '') +
               '<dt>メニュー</dt><dd>' + formatMenuItems(r.item) + '</dd>' +
               '<dt>受取時間</dt><dd>' + escapeHtml(r.time) + '</dd>' +
-              '<dt>手さげ袋</dt><dd>' + (r.wants_bag ? '<strong>希望あり</strong>' : '不要') + '</dd>' +
+              '<dt>手さげ袋希望</dt><dd>' + (r.wants_bag ? '<strong>あり</strong>' : 'なし') + '</dd>' +
               '<dt>追加要望</dt><dd>' + (r.note ? escapeHtml(r.note) : "（なし）") + '</dd>' +
             '</dl>' +
             '<div class="res-actions">' +

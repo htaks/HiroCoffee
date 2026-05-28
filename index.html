@@ -245,7 +245,7 @@
           <div class="field-bag-option">
             <label class="field-checkbox" for="wantsBagInput">
               <input type="checkbox" name="wants_bag" id="wantsBagInput" value="1">
-              <span>手さげ袋が欲しい</span>
+              <span>手さげ袋希望</span>
             </label>
           </div>
 
@@ -628,6 +628,8 @@
       const LINE_USER_KEY = "hiro-line-user";
       const LINE_STATE_KEY = "hiro-line-oauth-state";
       const lineLoginBtn = document.getElementById("lineLoginBtn");
+      const lineAddBtn = document.getElementById("lineAddBtn");
+      const lineLinkNote = document.querySelector(".line-link-note");
       const lineLinkBox = document.getElementById("lineLinkBox");
       const lineLinkStatus = document.getElementById("lineLinkStatus");
       const lineLinkStatusText = document.getElementById("lineLinkStatusText");
@@ -691,12 +693,18 @@
         if (lineLinkBox) lineLinkBox.classList.toggle("line-link-box--linked", !!isLinked);
       }
 
+      function setLineFriendAddVisible(show) {
+        if (lineAddBtn) lineAddBtn.hidden = !show;
+        if (lineLinkNote) lineLinkNote.hidden = !show;
+      }
+
       function updateLineLinkUi() {
         linkedLineUser = loadLinkedLineUser();
         if (!lineLoginBtn || !lineLinkStatusText) return;
 
         if (!isLineLoginConfigured()) {
           lineLoginBtn.hidden = true;
+          setLineFriendAddVisible(false);
           setLineLinkMessage(
             "（デモ）LINE連携は未設定です。本番では config.js に LINE_LOGIN_CHANNEL_ID を設定してください。",
             false
@@ -706,14 +714,16 @@
 
         if (linkedLineUser) {
           lineLoginBtn.hidden = true;
+          setLineFriendAddVisible(false);
           setLineLinkMessage(
             "LINE連携済み：" + (linkedLineUser.display_name || "ユーザー") +
-            " さん。友だち一覧に Hiro Coffee があるかもご確認ください。",
+            " さん。準備完了の通知はLINEでお知らせします。",
             true
           );
           applyLineNameToForm(form, linkedLineUser);
         } else {
           lineLoginBtn.hidden = false;
+          setLineFriendAddVisible(true);
           setLineLinkMessage(
             "LINEでログインし、Hiro Coffee を友だち追加してください。",
             false
@@ -757,10 +767,11 @@
         applyLineNameToForm(form, loadLinkedLineUser(), { force: true });
         setLineLinkMessage(
           "LINE連携済み：" + ((loadLinkedLineUser() || {}).display_name || "ユーザー") +
-          " さん。友だち一覧に Hiro Coffee がない場合は、下の「友だち追加」をタップしてください。",
+          " さん。準備完了の通知はLINEでお知らせします。",
           true
         );
         if (lineLoginBtn) lineLoginBtn.hidden = true;
+        setLineFriendAddVisible(false);
         history.replaceState(null, "", location.pathname + location.search + "#reserve");
       } else if (location.hash === "#line-error") {
         setLineLinkMessage(
@@ -768,6 +779,7 @@
           false
         );
         if (lineLoginBtn) lineLoginBtn.hidden = false;
+        setLineFriendAddVisible(true);
         history.replaceState(null, "", location.pathname + location.search + "#reserve");
       }
 
