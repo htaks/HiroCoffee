@@ -610,60 +610,41 @@
         );
       }
 
-      function getJstDayKey(date) {
-        date = date || new Date();
-        const parts = new Intl.DateTimeFormat("en-US", {
-          timeZone: "Asia/Tokyo",
-          month: "2-digit",
-          day: "2-digit",
-        }).formatToParts(date);
-        return parts.find((p) => p.type === "month").value +
-          parts.find((p) => p.type === "day").value;
-      }
+      async function insertReservation(cfg, client, payload) {
+        const body = {
+          name: payload.name,
+          item: payload.item,
+          time: payload.time,
+          note: payload.note,
+          line_user_id: payload.line_user_id || "",
+        };
 
-      async function createReservationNo(client, options) {
-        options = options || {};
-        const dayKey = getJstDayKey();
-        if (!options.forceRandom && client) {
-          try {
-            const { data, error } = await client
-              .from("reservations")
-              .select("reservation_no")
-              .like("reservation_no", dayKey + "-%");
-            if (!error && data) {
-              if (data.length === 0) {
-                return dayKey + "-001";
-              }
-              let max = 0;
-              for (const row of data) {
-                const seq = parseInt(String(row.reservation_no || "").split("-")[1], 10);
-                if (seq > max) max = seq;
-              }
-              return dayKey + "-" + String(max + 1).padStart(3, "0");
-            }
-          } catch (err) {
-            console.warn("[reserve] reservation_no lookup failed", err);
-          }
-        }
-        const rand = Math.floor(Math.random() * 900) + 100;
-        return dayKey + "-" + String(rand).padStart(3, "0");
-      }
+        const res = await fetch(cfg.SUPABASE_URL + "/functions/v1/create-reservation", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + cfg.SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify(body),
+        });
 
-      async function insertReservation(client, payload) {
-        for (let attempt = 0; attempt < 3; attempt++) {
-          const reservationNo = await createReservationNo(client, {
-            forceRandom: attempt > 0,
-          });
+        if (res.status === 404) {
           const { data, error } = await client
             .from("reservations")
-            .insert({ ...payload, reservation_no: reservationNo })
-            .select("reservation_no")
+            .insert({ ...payload })
+            .select("reservation_no, id")
             .single();
-          if (!error) return { data, error: null };
-          if (error.code === "23505" && attempt < 2) continue;
-          return { data: null, error };
+          return { data, error };
         }
-        return { data: null, error: { message: "予約番号の発行に失敗しました" } };
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          return {
+            data: null,
+            error: { message: data.error || "予約に失敗しました" },
+          };
+        }
+        return { data, error: null };
       }
 
       form.addEventListener("submit", async (e) => {
@@ -708,7 +689,7 @@
             return;
           }
 
-          const { data, error } = await insertReservation(supabase, reservation);
+          const { data, error } = await insertReservation(cfg, supabase, reservation);
 
           if (error) {
             console.error(error);
