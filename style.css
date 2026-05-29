@@ -14,7 +14,7 @@
 }
 
 html.env-staging {
-  --staging-banner-height: 28px;
+  --staging-banner-height: 0px;
 }
 
 .staging-env-banner {

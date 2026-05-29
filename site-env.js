@@ -13,20 +13,6 @@
   robots.content = "noindex, nofollow";
   document.head.appendChild(robots);
 
-  function bannerText() {
-    return "ステージング環境（専用DB・本番データとは分離）";
-  }
-
-  function injectBanner() {
-    if (document.getElementById("stagingEnvBanner")) return;
-    const bar = document.createElement("div");
-    bar.id = "stagingEnvBanner";
-    bar.className = "staging-env-banner";
-    bar.setAttribute("role", "status");
-    bar.textContent = bannerText();
-    document.body.prepend(bar);
-  }
-
   function updateTitle() {
     const title = document.title;
     if (title && title.indexOf("[STG]") !== 0) {
@@ -42,7 +28,6 @@
   }
 
   function init() {
-    injectBanner();
     updateTitle();
     updateVersionLabel();
   }
