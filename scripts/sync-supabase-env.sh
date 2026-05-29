@@ -36,14 +36,35 @@ db_region_for() {
   esac
 }
 
-db_url_for() {
+db_push_for() {
   local project_ref="$1"
   local db_password="$2"
-  local region encoded
+  local region encoded url
   region="$(db_region_for "$project_ref")"
   encoded=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$db_password")
-  # Session pooler (IPv4 friendly for GitHub Actions)
-  echo "postgresql://postgres.${project_ref}:${encoded}@aws-0-${region}.pooler.supabase.com:5432/postgres"
+
+  local urls=(
+    "postgresql://postgres:${encoded}@db.${project_ref}.supabase.co:5432/postgres"
+    "postgresql://postgres.${project_ref}:${encoded}@aws-1-${region}.pooler.supabase.com:5432/postgres"
+    "postgresql://postgres.${project_ref}:${encoded}@aws-0-${region}.pooler.supabase.com:5432/postgres"
+    "postgresql://postgres.${project_ref}:${encoded}@aws-1-${region}.pooler.supabase.com:6543/postgres"
+    "postgresql://postgres.${project_ref}:${encoded}@aws-0-${region}.pooler.supabase.com:6543/postgres"
+  )
+
+  local last_error=""
+  for url in "${urls[@]}"; do
+    local host
+    host="$(python3 -c "import sys, urllib.parse as u; print(u.urlparse(sys.argv[1]).hostname or '')" "$url")"
+    echo ">> db push via ${host}"
+    if supabase db push --db-url "$url"; then
+      echo ">> db push succeeded via ${host}"
+      return 0
+    fi
+    last_error="$host"
+  done
+
+  echo "ERROR: db push failed for all connection URLs (last host: ${last_error})" >&2
+  return 1
 }
 
 write_config() {
@@ -63,8 +84,6 @@ sync_one() {
 
   db_password="$(trim "$db_password")"
   project_ref="$(trim "$project_ref")"
-  local db_url
-  db_url="$(db_url_for "$project_ref" "$db_password")"
 
   echo ""
   echo "========== Supabase sync: $label ($project_ref) =========="
@@ -76,8 +95,8 @@ sync_one() {
   echo ">> supabase login (access token)"
   supabase login --token "$SUPABASE_ACCESS_TOKEN"
 
-  echo ">> db push (direct db-url, skip supabase link)"
-  supabase db push --db-url "$db_url"
+  echo ">> db push (try direct + pooler URLs)"
+  db_push_for "$project_ref" "$db_password"
 
   echo ">> deploy Edge Functions"
   for fn in "${FUNCTIONS[@]}"; do
