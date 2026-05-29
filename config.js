@@ -7,7 +7,7 @@
 // ステージング専用 Supabase を用意したら STAGING の URL / KEY を差し替えてください。
 
 (function () {
-  const SITE_VERSION = "1.2.15";
+  const SITE_VERSION = "1.2.16";
 
   const shared = {
     LINE_ADD_URL: "https://line.me/R/ti/p/@409azrvy",

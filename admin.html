@@ -8,8 +8,8 @@
   <link rel="apple-touch-icon" href="images/hiro_coffee_logo.png">
   <title>Hiro Coffee - 予約管理</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
-  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2/dist/umd/supabase.min.js"></script>
+  <script src="config.js?v=1.2.16"></script>
   <script src="site-env.js"></script>
   <script src="menu-prices.js"></script>
   <script src="demo-store.js"></script>
@@ -470,6 +470,7 @@
           persistSession: false,
           autoRefreshToken: false,
           detectSessionInUrl: false,
+          storageKey: (cfg.STORAGE_PREFIX || "hiro") + "-supabase-auth",
         },
       });
     }
@@ -480,6 +481,7 @@
           persistSession: false,
           autoRefreshToken: false,
           detectSessionInUrl: false,
+          storageKey: (cfg.STORAGE_PREFIX || "hiro") + "-supabase-auth",
         },
       };
       if (session && session.access_token) {

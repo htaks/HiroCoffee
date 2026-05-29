@@ -53,6 +53,21 @@ https://stg.hiro-coffee.com/line-callback.html
 
 ---
 
+## 3b. Supabase Auth（ステージング URL 追加）
+
+Supabase Dashboard → **Authentication** → **URL Configuration**
+
+**Redirect URLs** に追加:
+
+```
+https://stg.hiro-coffee.com/**
+https://stg.hiro-coffee.com/admin.html
+```
+
+（Site URL は本番 `https://hiro-coffee.com` のままで OK）
+
+---
+
 ## 4. 動作確認
 
 1. https://stg.hiro-coffee.com/ を開く
