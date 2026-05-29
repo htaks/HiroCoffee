@@ -14,13 +14,6 @@
   <link rel="icon" href="images/hiro_coffee_logo.png">
   <title>Hiro Coffee - 京都の楽しいコーヒー時間</title>
   <link rel="stylesheet" href="style.css">
-  <script>
-    (function () {
-      if (location.hash === "#reserve") {
-        history.replaceState(null, "", location.pathname + location.search);
-      }
-    })();
-  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
   <script src="menu-prices.js"></script>
@@ -1119,10 +1112,17 @@
 
       updateLineLinkUi({ lineError: lineLinkBootError });
 
-      if (location.hash === "#reserve") {
-        history.replaceState(null, "", location.pathname + location.search);
-        window.scrollTo(0, 0);
+      function scrollToPageHash() {
+        const hash = location.hash;
+        if (!hash || /^#line-/.test(hash)) return;
+        const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+        if (!target) return;
+        requestAnimationFrame(() => {
+          target.scrollIntoView({ behavior: "auto", block: "start" });
+        });
       }
+
+      scrollToPageHash();
 
       if (location.protocol === "file:" && lineLinkStatusText) {
         setLineLinkMessage(
