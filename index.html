@@ -1192,9 +1192,15 @@
 
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
+          const detail = data.detail && typeof data.detail === "object"
+            ? (data.detail.message || data.detail.hint || "")
+            : "";
           return {
             data: null,
-            error: { message: data.error || "予約に失敗しました" },
+            error: {
+              message: data.error || "予約に失敗しました",
+              detail: detail ? String(detail) : "",
+            },
           };
         }
         return { data, error: null };
@@ -1269,8 +1275,9 @@
 
           if (error) {
             console.error(error);
+            const detail = error.detail ? "（" + error.detail + "）" : "";
             noteEl.textContent =
-              "送信に失敗しました：" + (error.message || "もう一度お試しください。");
+              "送信に失敗しました：" + (error.message || "もう一度お試しください。") + detail;
           } else {
             noteEl.textContent = "ご予約ありがとうございます。";
             addReservationToHistory(data, reservation);

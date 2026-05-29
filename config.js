@@ -26,5 +26,5 @@ window.HIRO_CONFIG = {
   LINE_OAUTH_REDIRECT_URI: "",
 
   // サイトのバージョン（フッターに表示）
-  SITE_VERSION: "1.2.10",
+  SITE_VERSION: "1.2.11",
 };

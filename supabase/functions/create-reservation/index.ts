@@ -63,6 +63,16 @@ async function nextReservationNo(admin: ReturnType<typeof createClient>) {
   return dayKey + "-" + String(max + 1).padStart(3, "0");
 }
 
+function isMissingColumnError(error: unknown, column: string) {
+  const record = error && typeof error === "object"
+    ? error as { code?: string; message?: string }
+    : {};
+  const message = String(record.message || error || "");
+  return record.code === "42703" ||
+    record.code === "PGRST204" ||
+    message.includes(column);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -112,23 +122,28 @@ Deno.serve(async (req) => {
 
     let reservationNo = "";
     let lastError: unknown = null;
+    let includeLineIsFriend = true;
 
-    for (let attempt = 0; attempt < 3; attempt++) {
+    for (let attempt = 0; attempt < 5; attempt++) {
       reservationNo = await nextReservationNo(admin);
+      const row: Record<string, unknown> = {
+        name,
+        item,
+        time,
+        note,
+        wants_bag: wantsBag,
+        total_amount: totalAmount,
+        status: "pending",
+        line_user_id: lineUserId || null,
+        reservation_no: reservationNo,
+      };
+      if (includeLineIsFriend && lineUserId) {
+        row.line_is_friend = lineIsFriend;
+      }
+
       const { data, error } = await admin
         .from("reservations")
-        .insert({
-          name,
-          item,
-          time,
-          note,
-          wants_bag: wantsBag,
-          total_amount: totalAmount,
-          status: "pending",
-          line_user_id: lineUserId || null,
-          line_is_friend: lineUserId ? lineIsFriend : null,
-          reservation_no: reservationNo,
-        })
+        .insert(row)
         .select("id, reservation_no, total_amount")
         .single();
 
@@ -139,6 +154,12 @@ Deno.serve(async (req) => {
       }
 
       lastError = error;
+
+      if (includeLineIsFriend && isMissingColumnError(error, "line_is_friend")) {
+        includeLineIsFriend = false;
+        continue;
+      }
+
       if (error.code !== "23505") break;
     }
 
