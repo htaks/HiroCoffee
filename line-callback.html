@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LINE連携中 - Hiro Coffee</title>
-  <script src="config.js"></script>
+  <script src="config.js?v=1.3.1"></script>
   <script src="site-env.js"></script>
   <style>
     body {
@@ -69,7 +69,6 @@
         return;
       }
 
-      const cfg = window.HIRO_CONFIG || {};
       const redirectUri = cfg.LINE_OAUTH_REDIRECT_URI ||
         new URL("line-callback.html", location.href).href.split("?")[0];
 
