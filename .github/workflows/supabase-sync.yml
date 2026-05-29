@@ -1,0 +1,37 @@
+name: Supabase sync (prod + staging)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/functions/**"
+      - "scripts/sync-supabase-env.sh"
+      - ".github/workflows/supabase-sync.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: supabase-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Sync migrations and Edge Functions
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF_PRODUCTION: ytyllufahvcrmirxhlaf
+          SUPABASE_DB_PASSWORD_PRODUCTION: ${{ secrets.SUPABASE_DB_PASSWORD_PRODUCTION }}
+          SUPABASE_PROJECT_REF_STAGING: ${{ secrets.SUPABASE_PROJECT_REF_STAGING }}
+          SUPABASE_DB_PASSWORD_STAGING: ${{ secrets.SUPABASE_DB_PASSWORD_STAGING }}
+          LINE_LOGIN_CHANNEL_ID: "2010226071"
+          LINE_LOGIN_CHANNEL_SECRET: ${{ secrets.LINE_LOGIN_CHANNEL_SECRET }}
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+        run: bash scripts/sync-supabase-env.sh

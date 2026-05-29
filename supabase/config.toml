@@ -1,0 +1,22 @@
+# Supabase CLI 設定（GitHub Actions / ローカル sync 用）
+# https://supabase.com/docs/guides/cli
+
+project_id = ""
+
+[api]
+enabled = true
+
+[db]
+major_version = 15
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = true
+
+[auth]
+enabled = true
+
+[functions]
+# Edge Functions は supabase/functions/ 配下をデプロイ

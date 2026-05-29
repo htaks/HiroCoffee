@@ -14,10 +14,7 @@
   document.head.appendChild(robots);
 
   function bannerText() {
-    if (cfg.USES_PRODUCTION_DATABASE) {
-      return "ステージング環境（本番DB接続中・テストデータに注意）";
-    }
-    return "ステージング環境";
+    return "ステージング環境（専用DB・本番データとは分離）";
   }
 
   function injectBanner() {
