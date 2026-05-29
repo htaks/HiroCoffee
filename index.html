@@ -151,6 +151,7 @@
         <div class="line-link-box" id="lineLinkBox">
           <button type="button" class="btn btn-line" id="lineLoginBtn">LINEと連携する（通知用）</button>
           <a class="btn btn-line line-add-btn" id="lineAddBtn" href="#" target="_blank" rel="noopener noreferrer">Hiro Coffee を友だち追加</a>
+          <button type="button" class="btn btn-line-check" id="lineFriendCheckBtn" hidden>友だち追加を確認</button>
           <p class="line-link-note">ログイン後の「友だち追加」画面を必ずタップしてください。通知は公式アカウントから届きます。</p>
           <div id="lineLinkStatus" class="line-link-status" role="status" aria-live="polite">
             <span class="line-link-status__icon" aria-hidden="true"></span>
@@ -295,6 +296,12 @@
           <h3 id="reserveConfirmTitle" class="reserve-modal__title">ご注文内容の確認</h3>
           <ul id="reserveConfirmBreakdown" class="order-breakdown"></ul>
           <p class="reserve-modal__total" id="reserveConfirmTotal"></p>
+          <div id="reserveConfirmFriendWarning" class="reserve-modal__friend-warning" hidden role="alert">
+            <p class="reserve-modal__friend-warning-text">
+              友だち追加がまだのため、準備完了の LINE 通知が届きません。このまま予約してもよろしいですか？
+            </p>
+            <a class="btn btn-line line-add-btn reserve-modal__friend-add" id="reserveConfirmLineAdd" href="#" target="_blank" rel="noopener noreferrer">友だち追加する</a>
+          </div>
           <div class="reserve-modal__actions">
             <button type="button" class="btn" id="reserveConfirmCancel">戻る</button>
             <button type="button" class="btn btn-primary" id="reserveConfirmSubmit">予約確定</button>
@@ -622,6 +629,8 @@
       const reserveConfirmTotal = document.getElementById("reserveConfirmTotal");
       const reserveConfirmCancel = document.getElementById("reserveConfirmCancel");
       const reserveConfirmSubmit = document.getElementById("reserveConfirmSubmit");
+      const reserveConfirmFriendWarning = document.getElementById("reserveConfirmFriendWarning");
+      const reserveConfirmLineAdd = document.getElementById("reserveConfirmLineAdd");
       const menuPrices = window.HIRO_MENU_PRICES;
       let pendingReservation = null;
       setDefaultPickupTime(form);
@@ -763,6 +772,10 @@
         if (reserveConfirmTotal && menuPrices) {
           reserveConfirmTotal.textContent = "合計金額 " + menuPrices.formatYen(breakdown.total);
         }
+        const showFriendWarning = linkedLineUser && needsLineFriendAdd(linkedLineUser);
+        if (reserveConfirmFriendWarning) {
+          reserveConfirmFriendWarning.hidden = !showFriendWarning;
+        }
         reserveConfirmModal.hidden = false;
         reserveConfirmModal.setAttribute("aria-hidden", "false");
         document.body.classList.add("modal-open");
@@ -856,6 +869,7 @@
       const LINE_STATE_KEY = "hiro-line-oauth-state";
       const lineLoginBtn = document.getElementById("lineLoginBtn");
       const lineAddBtn = document.getElementById("lineAddBtn");
+      const lineFriendCheckBtn = document.getElementById("lineFriendCheckBtn");
       const lineLinkNote = document.querySelector(".line-link-note");
       const lineLinkBox = document.getElementById("lineLinkBox");
       const lineLinkStatus = document.getElementById("lineLinkStatus");
@@ -930,6 +944,71 @@
         if (lineLinkNote) lineLinkNote.hidden = !show;
       }
 
+      function setLineFriendCheckVisible(show) {
+        if (lineFriendCheckBtn) lineFriendCheckBtn.hidden = !show;
+      }
+
+      function saveLinkedLineUser(user) {
+        if (!user || !user.line_user_id) return;
+        setLineStore(LINE_USER_KEY, JSON.stringify(user));
+        linkedLineUser = user;
+      }
+
+      async function checkLineFriendship() {
+        const user = loadLinkedLineUser();
+        if (!user || !user.line_user_id) return;
+
+        if (!supabaseConfigured) {
+          setLineLinkMessage(
+            "デモモードでは友だち状態を確認できません。本番環境でご利用ください。",
+            true
+          );
+          return;
+        }
+
+        if (lineFriendCheckBtn) lineFriendCheckBtn.disabled = true;
+        setLineLinkMessage("友だち追加状態を確認中…", true);
+
+        try {
+          const res = await fetch(cfg.SUPABASE_URL + "/functions/v1/check-line-friend", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + cfg.SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({ line_user_id: user.line_user_id }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            throw new Error(data.error || "確認に失敗しました");
+          }
+
+          user.is_friend = !!data.is_friend;
+          saveLinkedLineUser(user);
+          updateLineLinkUi();
+
+          if (user.is_friend) {
+            setLineLinkMessage(
+              "友だち追加を確認しました。準備完了の LINE 通知が届きます。",
+              true
+            );
+          } else {
+            setLineLinkMessage(
+              "まだ友だち追加が確認できません。上の「Hiro Coffee を友だち追加」をタップしてから、もう一度「友だち追加を確認」を押してください。",
+              true
+            );
+          }
+        } catch (err) {
+          console.error(err);
+          setLineLinkMessage(
+            "確認に失敗しました。しばらくしてから再度お試しください。",
+            true
+          );
+        } finally {
+          if (lineFriendCheckBtn) lineFriendCheckBtn.disabled = false;
+        }
+      }
+
       function updateLineLinkUi() {
         linkedLineUser = loadLinkedLineUser();
         if (!lineLoginBtn || !lineLinkStatusText) return;
@@ -937,6 +1016,7 @@
         if (!isLineLoginConfigured()) {
           lineLoginBtn.hidden = true;
           setLineFriendAddVisible(false);
+          setLineFriendCheckVisible(false);
           setLineLinkMessage(
             "（デモ）LINE連携は未設定です。本番では config.js に LINE_LOGIN_CHANNEL_ID を設定してください。",
             false
@@ -948,6 +1028,7 @@
           lineLoginBtn.hidden = true;
           const missingFriend = needsLineFriendAdd(linkedLineUser);
           setLineFriendAddVisible(missingFriend);
+          setLineFriendCheckVisible(missingFriend);
           if (missingFriend) {
             setLineLinkMessage(
               "LINE連携済み：" + (linkedLineUser.display_name || "ユーザー") +
@@ -965,6 +1046,7 @@
         } else {
           lineLoginBtn.hidden = false;
           setLineFriendAddVisible(true);
+          setLineFriendCheckVisible(false);
           setLineLinkMessage(
             "LINEでログインし、表示された「友だち追加」もタップしてください。",
             false
@@ -1002,6 +1084,12 @@
       if (lineLoginBtn) {
         lineLoginBtn.addEventListener("click", startLineLogin);
       }
+      if (lineFriendCheckBtn) {
+        lineFriendCheckBtn.addEventListener("click", checkLineFriendship);
+      }
+      if (reserveConfirmLineAdd) {
+        reserveConfirmLineAdd.setAttribute("href", lineUrl);
+      }
 
       updateLineLinkUi();
 
@@ -1015,6 +1103,7 @@
             true
           );
           setLineFriendAddVisible(true);
+          setLineFriendCheckVisible(true);
         } else {
           setLineLinkMessage(
             "LINE連携済み：" + ((linkedUser || {}).display_name || "ユーザー") +
@@ -1022,6 +1111,7 @@
             true
           );
           setLineFriendAddVisible(false);
+          setLineFriendCheckVisible(false);
         }
         if (lineLoginBtn) lineLoginBtn.hidden = true;
         history.replaceState(null, "", location.pathname + location.search);
@@ -1033,6 +1123,7 @@
         );
         if (lineLoginBtn) lineLoginBtn.hidden = false;
         setLineFriendAddVisible(true);
+        setLineFriendCheckVisible(false);
         history.replaceState(null, "", location.pathname + location.search);
         window.scrollTo(0, 0);
       }
@@ -1087,6 +1178,7 @@
           wants_bag: !!payload.wants_bag,
           total_amount: payload.total_amount,
           line_user_id: payload.line_user_id || "",
+          line_is_friend: payload.line_is_friend,
         };
 
         const res = await fetch(cfg.SUPABASE_URL + "/functions/v1/create-reservation", {
@@ -1148,6 +1240,7 @@
         }
         if (linkedLineUser) {
           reservation.line_user_id = linkedLineUser.line_user_id;
+          reservation.line_is_friend = linkedLineUser.is_friend === true;
         }
 
         noteEl.textContent = "";

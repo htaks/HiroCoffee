@@ -81,6 +81,17 @@ Deno.serve(async (req) => {
     const lineUserId = body.line_user_id
       ? String(body.line_user_id).trim()
       : "";
+    const lineIsFriend = body.line_is_friend === true ||
+      body.line_is_friend === "true" ||
+      body.line_is_friend === 1 ||
+      body.line_is_friend === "1"
+        ? true
+        : (body.line_is_friend === false ||
+            body.line_is_friend === "false" ||
+            body.line_is_friend === 0 ||
+            body.line_is_friend === "0"
+          ? false
+          : null);
 
     if (!name || !item || !time) {
       return new Response(
@@ -115,6 +126,7 @@ Deno.serve(async (req) => {
           total_amount: totalAmount,
           status: "pending",
           line_user_id: lineUserId || null,
+          line_is_friend: lineUserId ? lineIsFriend : null,
           reservation_no: reservationNo,
         })
         .select("id, reservation_no, total_amount")

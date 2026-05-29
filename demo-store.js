@@ -123,6 +123,9 @@
           ? window.HIRO_MENU_PRICES.calcTotalFromItemString(record.item, !!record.wants_bag)
           : 0),
       line_user_id: record.line_user_id ? String(record.line_user_id) : "",
+      line_is_friend: record.line_is_friend === true
+        ? true
+        : (record.line_is_friend === false ? false : null),
       line_notified_at: record.line_notified_at || null,
     };
     items.push(row);

@@ -299,6 +299,11 @@
       color: #78350f;
       border: 1px solid rgba(120, 53, 15, 0.18);
     }
+    .line-badge--warn {
+      background: #fff1f2;
+      color: #9f1239;
+      border: 1px solid rgba(159, 18, 57, 0.22);
+    }
     .bag-badge {
       display: inline-flex;
       align-items: center;
@@ -600,7 +605,9 @@
         const lineBadge = hasLine
           ? (r.line_notified_at
             ? '<span class="line-badge line-badge--sent">LINE通知済</span>'
-            : '<span class="line-badge line-badge--ok">LINE連携済</span>')
+            : (r.line_is_friend === false
+              ? '<span class="line-badge line-badge--warn">友だち未登録</span>'
+              : '<span class="line-badge line-badge--ok">LINE連携済</span>'))
           : '<span class="line-badge line-badge--ng">LINE未連携</span>';
         const notifyBtn = (!isDone && !isHandedOver && hasLine)
           ? '<button class="btn btn-notify-line" data-action="notify-line">準備完了・LINE通知</button>'

@@ -1025,6 +1025,21 @@ h2 {
   text-decoration: none;
 }
 
+.btn-line-check {
+  color: #78350f;
+  border-color: rgba(120, 53, 15, 0.28);
+  background: #fff;
+}
+
+.btn-line-check:hover:not(:disabled) {
+  background: #fffaf3;
+}
+
+.btn-line-check:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 .line-link-note {
   margin: 0;
   color: var(--muted);
@@ -1690,6 +1705,31 @@ body.modal-open {
   font-weight: 700;
   text-align: right;
   color: var(--text);
+}
+
+.reserve-modal__friend-warning {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff1f2;
+  border: 1px solid rgba(159, 18, 57, 0.18);
+}
+
+.reserve-modal__friend-warning[hidden] {
+  display: none;
+}
+
+.reserve-modal__friend-warning-text {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #9f1239;
+}
+
+.reserve-modal__friend-add {
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
 }
 
 .reserve-modal__actions {
