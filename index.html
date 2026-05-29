@@ -15,7 +15,7 @@
   <title>Hiro Coffee - 京都の楽しいコーヒー時間</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2/dist/umd/supabase.min.js"></script>
-  <script src="config.js?v=1.3.3"></script>
+  <script src="config.js?v=1.3.4"></script>
   <script src="site-env.js"></script>
   <script src="menu-prices.js"></script>
   <script src="demo-store.js"></script>
@@ -146,6 +146,7 @@
           <button type="button" class="btn btn-line" id="lineLoginBtn">LINEと連携する（通知用）</button>
           <a class="btn btn-line line-add-btn" id="lineAddBtn" href="#" hidden>Hiro Coffee を友だち追加</a>
           <button type="button" class="line-link-check-hint" id="lineFriendCheckBtn" hidden>友だち追加済みの方はこちら</button>
+          <button type="button" class="line-link-check-hint" id="lineUnlinkBtn" hidden>連携をやり直す</button>
           <p class="line-link-note" id="lineLinkNote">連携後、友だち追加画面が自動で開きます。「追加」をタップしてください。通知は公式アカウントから届きます。</p>
           <div id="lineLinkStatus" class="line-link-status" role="status" aria-live="polite">
             <span class="line-link-status__icon" aria-hidden="true"></span>
@@ -861,6 +862,8 @@
       const LINE_USER_KEY = storagePrefix + "-line-user";
       const LINE_STATE_KEY = storagePrefix + "-line-oauth-state";
       const LINE_PENDING_FRIEND_KEY = storagePrefix + "-line-pending-friend";
+      const LINE_AUTO_ADD_ONCE_KEY = storagePrefix + "-line-auto-add-once";
+      const LINE_FRIEND_CHECK_ONCE_KEY = storagePrefix + "-line-friend-check-once";
       const lineUrl = cfg.LINE_ADD_URL || "#";
       document.querySelectorAll("#lineAddBtn").forEach((a) => {
         a.setAttribute("href", lineUrl);
@@ -869,6 +872,7 @@
       const lineLoginBtn = document.getElementById("lineLoginBtn");
       const lineAddBtn = document.getElementById("lineAddBtn");
       const lineFriendCheckBtn = document.getElementById("lineFriendCheckBtn");
+      const lineUnlinkBtn = document.getElementById("lineUnlinkBtn");
       const lineLinkNote = document.getElementById("lineLinkNote");
       const lineLinkBox = document.getElementById("lineLinkBox");
       const lineLinkStatus = document.getElementById("lineLinkStatus");
@@ -941,10 +945,31 @@
       function setLineLinkMode(mode) {
         const showLogin = mode === "unlinked";
         const showFriendActions = mode === "needs-friend";
+        const showLinkedActions = mode === "needs-friend" || mode === "complete";
         if (lineLoginBtn) lineLoginBtn.hidden = !showLogin;
         if (lineAddBtn) lineAddBtn.hidden = !showFriendActions;
         if (lineFriendCheckBtn) lineFriendCheckBtn.hidden = !showFriendActions;
+        if (lineUnlinkBtn) lineUnlinkBtn.hidden = !showLinkedActions;
         if (lineLinkNote) lineLinkNote.hidden = !showLogin;
+      }
+
+      function clearLineLink() {
+        removeLineStore(LINE_USER_KEY);
+        removeLineStore(LINE_STATE_KEY);
+        removeLineStore(LINE_PENDING_FRIEND_KEY);
+        sessionStorage.removeItem(LINE_AUTO_ADD_ONCE_KEY);
+        sessionStorage.removeItem(LINE_FRIEND_CHECK_ONCE_KEY);
+        linkedLineUser = null;
+        pendingFriendCheck = false;
+        updateLineLinkUi();
+        setLineLinkMessage("LINE連携を解除しました。もう一度「LINEと連携する」から始められます。", false);
+      }
+
+      function maybeAutoCheckLineFriendship() {
+        if (!needsLineFriendAdd(loadLinkedLineUser())) return;
+        if (sessionStorage.getItem(LINE_FRIEND_CHECK_ONCE_KEY)) return;
+        sessionStorage.setItem(LINE_FRIEND_CHECK_ONCE_KEY, "1");
+        checkLineFriendship();
       }
 
       let pendingFriendCheck = false;
@@ -1104,6 +1129,9 @@
       if (lineFriendCheckBtn) {
         lineFriendCheckBtn.addEventListener("click", checkLineFriendship);
       }
+      if (lineUnlinkBtn) {
+        lineUnlinkBtn.addEventListener("click", clearLineLink);
+      }
       if (reserveConfirmLineAdd) {
         reserveConfirmLineAdd.setAttribute("href", lineUrl);
       }
@@ -1130,8 +1158,6 @@
         pendingFriendCheck = true;
         checkLineFriendship();
       });
-
-      const LINE_AUTO_ADD_ONCE_KEY = storagePrefix + "-line-auto-add-once";
 
       function maybeAutoOpenLineFriendAdd() {
         if (!needsLineFriendAdd(loadLinkedLineUser())) return;
@@ -1226,6 +1252,8 @@
       ) {
         pendingFriendCheck = true;
         checkLineFriendship();
+      } else if (needsLineFriendAdd(loadLinkedLineUser())) {
+        maybeAutoCheckLineFriendship();
       }
 
       async function insertReservation(cfg, client, payload) {
