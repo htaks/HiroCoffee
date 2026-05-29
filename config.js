@@ -7,7 +7,7 @@
 // 詳細: supabase/SYNC.md
 
 (function () {
-  const SITE_VERSION = "1.3.4";
+  const SITE_VERSION = "1.3.5";
 
   const shared = {
     LINE_ADD_URL: "https://line.me/R/ti/p/@409azrvy",

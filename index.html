@@ -15,7 +15,7 @@
   <title>Hiro Coffee - 京都の楽しいコーヒー時間</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2/dist/umd/supabase.min.js"></script>
-  <script src="config.js?v=1.3.4"></script>
+  <script src="config.js?v=1.3.5"></script>
   <script src="site-env.js"></script>
   <script src="menu-prices.js"></script>
   <script src="demo-store.js"></script>
@@ -942,14 +942,19 @@
         return user.is_friend !== true;
       }
 
+      function formatLineLinkedCompleteMessage(displayName) {
+        const name = String(displayName || "").trim() || "ユーザー";
+        return "LINE連携済み：" + name +
+          "さん、テイクアウトの準備ができたら Hiro Coffee から LINE でお知らせします。";
+      }
+
       function setLineLinkMode(mode) {
         const showLogin = mode === "unlinked";
         const showFriendActions = mode === "needs-friend";
-        const showLinkedActions = mode === "needs-friend" || mode === "complete";
         if (lineLoginBtn) lineLoginBtn.hidden = !showLogin;
         if (lineAddBtn) lineAddBtn.hidden = !showFriendActions;
         if (lineFriendCheckBtn) lineFriendCheckBtn.hidden = !showFriendActions;
-        if (lineUnlinkBtn) lineUnlinkBtn.hidden = !showLinkedActions;
+        if (lineUnlinkBtn) lineUnlinkBtn.hidden = !showFriendActions;
         if (lineLinkNote) lineLinkNote.hidden = !showLogin;
       }
 
@@ -1026,7 +1031,7 @@
 
           if (user.is_friend) {
             setLineLinkMessage(
-              "友だち追加を確認しました。準備完了の LINE 通知が届きます。",
+              formatLineLinkedCompleteMessage(user.display_name),
               true
             );
           } else {
@@ -1071,8 +1076,7 @@
             );
           } else {
             setLineLinkMessage(
-              "LINE連携済み：" + (linkedLineUser.display_name || "ユーザー") +
-              " さん。Hiro Coffee 公式アカウントと友だち連携済みです。",
+              formatLineLinkedCompleteMessage(linkedLineUser.display_name),
               true
             );
           }
