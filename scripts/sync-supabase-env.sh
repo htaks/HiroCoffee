@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 本番・ステージングの Supabase に migrations / Edge Functions を同期
+# Sync migrations and Edge Functions to production + staging Supabase projects.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -12,6 +12,10 @@ FUNCTIONS=(
   check-line-friend
   sync-reservation-history
 )
+
+trim() {
+  printf '%s' "$1" | tr -d '\r\n'
+}
 
 require_var() {
   local name="$1"
@@ -26,12 +30,17 @@ sync_one() {
   local project_ref="$2"
   local db_password="$3"
 
+  db_password="$(trim "$db_password")"
+  project_ref="$(trim "$project_ref")"
+
   echo ""
   echo "========== Supabase sync: $label ($project_ref) =========="
 
+  export SUPABASE_ACCESS_TOKEN
   export SUPABASE_PROJECT_ID="$project_ref"
   export SUPABASE_DB_PASSWORD="$db_password"
 
+  echo ">> supabase link"
   supabase link --project-ref "$project_ref" --password "$db_password"
 
   echo ">> db push"
@@ -39,15 +48,16 @@ sync_one() {
 
   echo ">> deploy Edge Functions"
   for fn in "${FUNCTIONS[@]}"; do
+    echo "   deploy $fn"
     supabase functions deploy "$fn" --project-ref "$project_ref"
   done
 
   if [ -n "${LINE_LOGIN_CHANNEL_ID:-}" ] && [ -n "${LINE_LOGIN_CHANNEL_SECRET:-}" ] && [ -n "${LINE_CHANNEL_ACCESS_TOKEN:-}" ]; then
     echo ">> set Edge Function secrets"
     supabase secrets set \
-      LINE_LOGIN_CHANNEL_ID="$LINE_LOGIN_CHANNEL_ID" \
-      LINE_LOGIN_CHANNEL_SECRET="$LINE_LOGIN_CHANNEL_SECRET" \
-      LINE_CHANNEL_ACCESS_TOKEN="$LINE_CHANNEL_ACCESS_TOKEN" \
+      LINE_LOGIN_CHANNEL_ID="$(trim "$LINE_LOGIN_CHANNEL_ID")" \
+      LINE_LOGIN_CHANNEL_SECRET="$(trim "$LINE_LOGIN_CHANNEL_SECRET")" \
+      LINE_CHANNEL_ACCESS_TOKEN="$(trim "$LINE_CHANNEL_ACCESS_TOKEN")" \
       --project-ref "$project_ref"
   else
     echo ">> skip secrets (LINE_* env vars not set)"
@@ -56,11 +66,14 @@ sync_one() {
   echo ">> done: $label"
 }
 
+echo "Supabase CLI: $(supabase --version)"
+
 require_var SUPABASE_ACCESS_TOKEN
 export SUPABASE_ACCESS_TOKEN
 
 require_var SUPABASE_PROJECT_REF_PRODUCTION
 require_var SUPABASE_DB_PASSWORD_PRODUCTION
+
 sync_one "production" "$SUPABASE_PROJECT_REF_PRODUCTION" "$SUPABASE_DB_PASSWORD_PRODUCTION"
 
 if [ -n "${SUPABASE_PROJECT_REF_STAGING:-}" ] && [ -n "${SUPABASE_DB_PASSWORD_STAGING:-}" ]; then
