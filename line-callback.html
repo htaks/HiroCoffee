@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LINE連携中 - Hiro Coffee</title>
   <script src="config.js"></script>
+  <script src="site-env.js"></script>
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -21,8 +22,10 @@
   <p id="status">LINE連携中です…</p>
   <script>
     (async () => {
-      const LINE_USER_KEY = "hiro-line-user";
-      const LINE_STATE_KEY = "hiro-line-oauth-state";
+      const cfg = window.HIRO_CONFIG || {};
+      const storagePrefix = cfg.STORAGE_PREFIX || "hiro";
+      const LINE_USER_KEY = storagePrefix + "-line-user";
+      const LINE_STATE_KEY = storagePrefix + "-line-oauth-state";
       const statusEl = document.getElementById("status");
 
       function setLineStore(key, value) {

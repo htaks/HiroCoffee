@@ -3,8 +3,9 @@
 // ================================================================
 
 (function () {
-  const LINE_USER_KEY = "hiro-line-user";
   const cfg = window.HIRO_CONFIG || {};
+  const storagePrefix = cfg.STORAGE_PREFIX || "hiro";
+  const LINE_USER_KEY = storagePrefix + "-line-user";
   const historyStore = window.HIRO_RESERVATION_HISTORY;
   const menuPrices = window.HIRO_MENU_PRICES;
   const view = window.HIRO_ORDER_HISTORY_VIEW;

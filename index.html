@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
+  <script src="site-env.js"></script>
   <script src="menu-prices.js"></script>
   <script src="demo-store.js"></script>
   <script src="reservation-history.js"></script>
@@ -856,13 +857,14 @@
 
       // LINE 友だち追加ボタンの URL を config から差し込み
       const cfg = window.HIRO_CONFIG || {};
+      const storagePrefix = cfg.STORAGE_PREFIX || "hiro";
+      const LINE_USER_KEY = storagePrefix + "-line-user";
+      const LINE_STATE_KEY = storagePrefix + "-line-oauth-state";
       const lineUrl = cfg.LINE_ADD_URL || "#";
       document.querySelectorAll("#lineAddBtn").forEach((a) => {
         a.setAttribute("href", lineUrl);
       });
 
-      const LINE_USER_KEY = "hiro-line-user";
-      const LINE_STATE_KEY = "hiro-line-oauth-state";
       const lineLoginBtn = document.getElementById("lineLoginBtn");
       const lineAddBtn = document.getElementById("lineAddBtn");
       const lineFriendCheckBtn = document.getElementById("lineFriendCheckBtn");

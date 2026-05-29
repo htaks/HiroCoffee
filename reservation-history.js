@@ -3,10 +3,12 @@
 // ================================================================
 
 (function () {
-  const STORAGE_PREFIX = "hiro-reservation-history:";
+  function storagePrefix() {
+    return (window.HIRO_CONFIG || {}).STORAGE_PREFIX || "hiro";
+  }
 
   function storageKey(lineUserId) {
-    return STORAGE_PREFIX + String(lineUserId || "guest");
+    return storagePrefix() + "-reservation-history:" + String(lineUserId || "guest");
   }
 
   function read(lineUserId) {

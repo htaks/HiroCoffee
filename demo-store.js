@@ -17,12 +17,21 @@
 // ================================================================
 
 (function () {
-  const STORAGE_KEY = "hiro_demo_reservations";
-  const CHANNEL_NAME = "hiro-demo-store";
+  function storagePrefix() {
+    return (window.HIRO_CONFIG || {}).STORAGE_PREFIX || "hiro";
+  }
+
+  function getStorageKey() {
+    return storagePrefix() + "_demo_reservations";
+  }
+
+  function getChannelName() {
+    return storagePrefix() + "-demo-store";
+  }
 
   function read() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(getStorageKey());
       const arr = raw ? JSON.parse(raw) : [];
       return Array.isArray(arr) ? arr : [];
     } catch (e) {
@@ -33,7 +42,7 @@
 
   function write(arr) {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+      localStorage.setItem(getStorageKey(), JSON.stringify(arr));
     } catch (e) {
       console.warn("[demo-store] write failed", e);
     }
@@ -58,7 +67,7 @@
   let broadcastChannel = null;
   try {
     if ("BroadcastChannel" in window) {
-      broadcastChannel = new BroadcastChannel(CHANNEL_NAME);
+      broadcastChannel = new BroadcastChannel(getChannelName());
     }
   } catch (e) {
     broadcastChannel = null;
@@ -164,7 +173,7 @@
     let bc = null;
     try {
       if ("BroadcastChannel" in window) {
-        bc = new BroadcastChannel(CHANNEL_NAME);
+        bc = new BroadcastChannel(getChannelName());
         bc.onmessage = (ev) => {
           if (!ev || !ev.data) return;
           try { cb(ev.data.event, ev.data.payload); } catch (err) { console.error(err); }
@@ -173,7 +182,7 @@
     } catch (e) { bc = null; }
 
     const storageHandler = (ev) => {
-      if (ev.key === STORAGE_KEY) {
+      if (ev.key === getStorageKey()) {
         try { cb("REFRESH", null); } catch (err) { console.error(err); }
       }
     };
@@ -187,7 +196,7 @@
   }
 
   window.HIRO_DEMO_STORE = {
-    STORAGE_KEY,
+    get STORAGE_KEY() { return getStorageKey(); },
     isSupabaseConfigured,
     listAll,
     insert,

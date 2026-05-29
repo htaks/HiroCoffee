@@ -1,30 +1,49 @@
-// ===== サイト共通の設定（このファイルだけ書き換えればOK） =====
+// ===== サイト共通の設定 =====
 //
-// Supabase の URL と publishable / anon key を入れてください。
-// 取得方法: https://supabase.com → プロジェクト → Project Settings →
-//   API Keys → "Publishable key"（または旧: anon public）をコピー
+// 本番: https://hiro-coffee.com/
+// STG : https://stg.hiro-coffee.com/
 //
-// LINE 公式アカウントの友だち追加URLを入れてください。
-// 取得方法: LINE Official Account Manager → 友だち追加 → URL/QRコード
-//   例: https://lin.ee/xxxxx もしくは https://line.me/R/ti/p/@xxxxx
-//
-window.HIRO_CONFIG = {
-  // 必須: Supabase 接続情報
-  SUPABASE_URL: "https://ytyllufahvcrmirxhlaf.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0eWxsdWZhaHZjcm1pcnhobGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5NzIwNDIsImV4cCI6MjA5NTU0ODA0Mn0.1LdvRLxI8bfdIh3uu86D7yvb6NlLdVepQLCnlo1rHB8",
+// ホスト名が stg.* のとき STAGING 設定が使われます。
+// ステージング専用 Supabase を用意したら STAGING の URL / KEY を差し替えてください。
 
-  // 必須: LINE 公式アカウント友だち追加URL
-  LINE_ADD_URL: "https://line.me/R/ti/p/@409azrvy",
+(function () {
+  const SITE_VERSION = "1.2.14";
 
-  // LINE Login チャネルの Channel ID（Basic settings）
-  // ※ Messaging API チャネル（公式アカウント）と LINE Developers で「リンク」必須
-  LINE_LOGIN_CHANNEL_ID: "2010226071",
+  const shared = {
+    LINE_ADD_URL: "https://line.me/R/ti/p/@409azrvy",
+    LINE_LOGIN_CHANNEL_ID: "2010226071",
+    LINE_OAUTH_REDIRECT_URI: "",
+    SITE_VERSION,
+  };
 
-  // OAuth コールバック URL
-  // 本番: 空のまま（アクセス中のURLから自動判定）
-  // ローカルで固定したい場合のみ例: "http://127.0.0.1:3000/line-callback.html"
-  LINE_OAUTH_REDIRECT_URI: "",
+  const production = {
+    ...shared,
+    ENV: "production",
+    SITE_LABEL: "",
+    STORAGE_PREFIX: "hiro",
+    SUPABASE_URL: "https://ytyllufahvcrmirxhlaf.supabase.co",
+    SUPABASE_ANON_KEY:
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0eWxsdWZhaHZjcm1pcnhobGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5NzIwNDIsImV4cCI6MjA5NTU0ODA0Mn0.1LdvRLxI8bfdIh3uu86D7yvb6NlLdVepQLCnlo1rHB8",
+    USES_PRODUCTION_DATABASE: false,
+  };
 
-  // サイトのバージョン（フッターに表示）
-  SITE_VERSION: "1.2.13",
-};
+  const staging = {
+    ...shared,
+    ENV: "staging",
+    SITE_LABEL: "STG",
+    STORAGE_PREFIX: "hiro-stg",
+    // TODO: ステージング専用 Supabase プロジェクト作成後に差し替え
+    SUPABASE_URL: "https://ytyllufahvcrmirxhlaf.supabase.co",
+    SUPABASE_ANON_KEY:
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0eWxsdWZhaHZjcm1pcnhobGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5NzIwNDIsImV4cCI6MjA5NTU0ODA0Mn0.1LdvRLxI8bfdIh3uu86D7yvb6NlLdVepQLCnlo1rHB8",
+    USES_PRODUCTION_DATABASE: true,
+  };
+
+  const host =
+    typeof location !== "undefined" ? String(location.hostname || "").toLowerCase() : "";
+  const isStaging = host === "stg.hiro-coffee.com" || host.startsWith("stg.");
+
+  const cfg = isStaging ? staging : production;
+  cfg.isStaging = isStaging;
+  window.HIRO_CONFIG = cfg;
+})();

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
   <script src="config.js"></script>
+  <script src="site-env.js"></script>
   <script src="menu-prices.js"></script>
   <script src="demo-store.js"></script>
   <style>
@@ -323,7 +324,7 @@
     .btn-notify-line:hover { background: #f6efe1; }
   </style>
 </head>
-<body>
+<body class="admin-page">
   <div class="wrap">
     <section class="card login-card" id="loginCard" hidden>
       <h2>管理画面ログイン</h2>
@@ -423,7 +424,7 @@
           cfg.SUPABASE_ANON_KEY.indexOf("YOUR-") === -1
         );
 
-    const ADMIN_SESSION_KEY = "hiro-admin-session";
+    const ADMIN_SESSION_KEY = (cfg.STORAGE_PREFIX || "hiro") + "-admin-session";
 
     function isSessionValid(session) {
       if (!session || !session.access_token) return false;
