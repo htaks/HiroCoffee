@@ -15,7 +15,7 @@
   <title>Hiro Coffee - 京都の楽しいコーヒー時間</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2/dist/umd/supabase.min.js"></script>
-  <script src="config.js?v=1.3.2"></script>
+  <script src="config.js?v=1.3.3"></script>
   <script src="site-env.js"></script>
   <script src="menu-prices.js"></script>
   <script src="demo-store.js"></script>
@@ -144,7 +144,7 @@
 
         <div class="line-link-box" id="lineLinkBox">
           <button type="button" class="btn btn-line" id="lineLoginBtn">LINEと連携する（通知用）</button>
-          <a class="btn btn-line line-add-btn" id="lineAddBtn" href="#" target="_blank" rel="noopener noreferrer" hidden>Hiro Coffee を友だち追加</a>
+          <a class="btn btn-line line-add-btn" id="lineAddBtn" href="#" hidden>Hiro Coffee を友だち追加</a>
           <button type="button" class="line-link-check-hint" id="lineFriendCheckBtn" hidden>友だち追加済みの方はこちら</button>
           <p class="line-link-note" id="lineLinkNote">連携後、友だち追加画面が自動で開きます。「追加」をタップしてください。通知は公式アカウントから届きます。</p>
           <div id="lineLinkStatus" class="line-link-status" role="status" aria-live="polite">
@@ -1040,7 +1040,7 @@
           setLineLinkMode(missingFriend ? "needs-friend" : "complete");
           if (missingFriend) {
             setLineLinkMessage(
-              "LINE連携済み：" + (linkedLineUser.display_name || "ユーザー") +
+              "LINEログイン済み：" + (linkedLineUser.display_name || "ユーザー") +
               " さん。Hiro Coffee を友だち追加すると、準備完了の通知が届きます。",
               true
             );
@@ -1094,9 +1094,11 @@
         lineLoginBtn.addEventListener("click", startLineLogin);
       }
       if (lineAddBtn) {
-        lineAddBtn.addEventListener("click", () => {
+        lineAddBtn.addEventListener("click", (event) => {
+          event.preventDefault();
           setLineStore(LINE_PENDING_FRIEND_KEY, "1");
           pendingFriendCheck = true;
+          openLineFriendAdd();
         });
       }
       if (lineFriendCheckBtn) {
@@ -1128,6 +1130,15 @@
         pendingFriendCheck = true;
         checkLineFriendship();
       });
+
+      const LINE_AUTO_ADD_ONCE_KEY = storagePrefix + "-line-auto-add-once";
+
+      function maybeAutoOpenLineFriendAdd() {
+        if (!needsLineFriendAdd(loadLinkedLineUser())) return;
+        if (sessionStorage.getItem(LINE_AUTO_ADD_ONCE_KEY)) return;
+        sessionStorage.setItem(LINE_AUTO_ADD_ONCE_KEY, "1");
+        openLineFriendAdd();
+      }
 
       let lineLinkBootError = false;
       let lineAutoAddAfterLink = false;
@@ -1208,7 +1219,7 @@
         pendingFriendCheck = true;
         checkLineFriendship();
       } else if (lineAutoAddAfterLink && needsLineFriendAdd(loadLinkedLineUser())) {
-        openLineFriendAdd();
+        maybeAutoOpenLineFriendAdd();
       } else if (
         getLineStore(LINE_PENDING_FRIEND_KEY) &&
         needsLineFriendAdd(loadLinkedLineUser())
