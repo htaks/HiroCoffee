@@ -2,3 +2,18 @@ project_id = ""
 
 [db]
 major_version = 15
+
+[functions.line-oauth]
+verify_jwt = false
+
+[functions.create-reservation]
+verify_jwt = false
+
+[functions.check-line-friend]
+verify_jwt = false
+
+[functions.sync-reservation-history]
+verify_jwt = false
+
+[functions.notify-ready]
+verify_jwt = false

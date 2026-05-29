@@ -83,6 +83,21 @@ project_id = "${project_ref}"
 
 [db]
 major_version = 15
+
+[functions.line-oauth]
+verify_jwt = false
+
+[functions.create-reservation]
+verify_jwt = false
+
+[functions.check-line-friend]
+verify_jwt = false
+
+[functions.sync-reservation-history]
+verify_jwt = false
+
+[functions.notify-ready]
+verify_jwt = false
 EOF
 }
 
@@ -110,7 +125,7 @@ sync_one() {
   echo ">> deploy Edge Functions"
   for fn in "${FUNCTIONS[@]}"; do
     echo "   deploy $fn"
-    supabase functions deploy "$fn" --project-ref "$project_ref"
+    supabase functions deploy "$fn" --project-ref "$project_ref" --no-verify-jwt
   done
 
   if [ -n "${LINE_LOGIN_CHANNEL_ID:-}" ] && [ -n "${LINE_LOGIN_CHANNEL_SECRET:-}" ] && [ -n "${LINE_CHANNEL_ACCESS_TOKEN:-}" ]; then
