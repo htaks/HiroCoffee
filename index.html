@@ -150,9 +150,9 @@
 
         <div class="line-link-box" id="lineLinkBox">
           <button type="button" class="btn btn-line" id="lineLoginBtn">LINEと連携する（通知用）</button>
-          <a class="btn btn-line line-add-btn" id="lineAddBtn" href="#" target="_blank" rel="noopener noreferrer">Hiro Coffee を友だち追加</a>
-          <button type="button" class="btn btn-line-check" id="lineFriendCheckBtn" hidden>友だち追加を確認</button>
-          <p class="line-link-note">ログイン後の「友だち追加」画面を必ずタップしてください。通知は公式アカウントから届きます。</p>
+          <a class="btn btn-line line-add-btn" id="lineAddBtn" href="#" target="_blank" rel="noopener noreferrer" hidden>Hiro Coffee を友だち追加</a>
+          <button type="button" class="line-link-check-hint" id="lineFriendCheckBtn" hidden>友だち追加済みの方はこちら</button>
+          <p class="line-link-note" id="lineLinkNote">ログイン後に表示される「友だち追加」画面もタップしてください。通知は公式アカウントから届きます。</p>
           <div id="lineLinkStatus" class="line-link-status" role="status" aria-live="polite">
             <span class="line-link-status__icon" aria-hidden="true"></span>
             <p id="lineLinkStatusText" class="line-link-status__text"></p>
@@ -870,7 +870,7 @@
       const lineLoginBtn = document.getElementById("lineLoginBtn");
       const lineAddBtn = document.getElementById("lineAddBtn");
       const lineFriendCheckBtn = document.getElementById("lineFriendCheckBtn");
-      const lineLinkNote = document.querySelector(".line-link-note");
+      const lineLinkNote = document.getElementById("lineLinkNote");
       const lineLinkBox = document.getElementById("lineLinkBox");
       const lineLinkStatus = document.getElementById("lineLinkStatus");
       const lineLinkStatusText = document.getElementById("lineLinkStatusText");
@@ -939,14 +939,16 @@
         return user.is_friend !== true;
       }
 
-      function setLineFriendAddVisible(show) {
-        if (lineAddBtn) lineAddBtn.hidden = !show;
-        if (lineLinkNote) lineLinkNote.hidden = !show;
+      function setLineLinkMode(mode) {
+        const showLogin = mode === "unlinked";
+        const showFriendActions = mode === "needs-friend";
+        if (lineLoginBtn) lineLoginBtn.hidden = !showLogin;
+        if (lineAddBtn) lineAddBtn.hidden = !showFriendActions;
+        if (lineFriendCheckBtn) lineFriendCheckBtn.hidden = !showFriendActions;
+        if (lineLinkNote) lineLinkNote.hidden = !showLogin;
       }
 
-      function setLineFriendCheckVisible(show) {
-        if (lineFriendCheckBtn) lineFriendCheckBtn.hidden = !show;
-      }
+      let pendingFriendCheck = false;
 
       function saveLinkedLineUser(user) {
         if (!user || !user.line_user_id) return;
@@ -994,7 +996,7 @@
             );
           } else {
             setLineLinkMessage(
-              "まだ友だち追加が確認できません。上の「Hiro Coffee を友だち追加」をタップしてから、もう一度「友だち追加を確認」を押してください。",
+              "まだ友だち追加が確認できません。「Hiro Coffee を友だち追加」をタップしてから、もう一度お試しください。",
               true
             );
           }
@@ -1009,14 +1011,13 @@
         }
       }
 
-      function updateLineLinkUi() {
+      function updateLineLinkUi(options) {
+        options = options || {};
         linkedLineUser = loadLinkedLineUser();
         if (!lineLoginBtn || !lineLinkStatusText) return;
 
         if (!isLineLoginConfigured()) {
-          lineLoginBtn.hidden = true;
-          setLineFriendAddVisible(false);
-          setLineFriendCheckVisible(false);
+          setLineLinkMode("complete");
           setLineLinkMessage(
             "（デモ）LINE連携は未設定です。本番では config.js に LINE_LOGIN_CHANNEL_ID を設定してください。",
             false
@@ -1025,14 +1026,12 @@
         }
 
         if (linkedLineUser) {
-          lineLoginBtn.hidden = true;
           const missingFriend = needsLineFriendAdd(linkedLineUser);
-          setLineFriendAddVisible(missingFriend);
-          setLineFriendCheckVisible(missingFriend);
+          setLineLinkMode(missingFriend ? "needs-friend" : "complete");
           if (missingFriend) {
             setLineLinkMessage(
               "LINE連携済み：" + (linkedLineUser.display_name || "ユーザー") +
-              " さん。友だち一覧に Hiro Coffee がありません。下のボタンから友だち追加してください（通知に必要です）。",
+              " さん。Hiro Coffee を友だち追加すると、準備完了の通知が届きます。",
               true
             );
           } else {
@@ -1044,11 +1043,11 @@
           }
           applyLineNameToForm(form, linkedLineUser);
         } else {
-          lineLoginBtn.hidden = false;
-          setLineFriendAddVisible(true);
-          setLineFriendCheckVisible(false);
+          setLineLinkMode("unlinked");
           setLineLinkMessage(
-            "LINEでログインし、表示された「友だち追加」もタップしてください。",
+            options.lineError
+              ? "LINE連携に失敗しました。もう一度お試しください。"
+              : "予約前に LINE でログインしてください。",
             false
           );
         }
@@ -1084,6 +1083,11 @@
       if (lineLoginBtn) {
         lineLoginBtn.addEventListener("click", startLineLogin);
       }
+      if (lineAddBtn) {
+        lineAddBtn.addEventListener("click", () => {
+          pendingFriendCheck = true;
+        });
+      }
       if (lineFriendCheckBtn) {
         lineFriendCheckBtn.addEventListener("click", checkLineFriendship);
       }
@@ -1091,42 +1095,29 @@
         reserveConfirmLineAdd.setAttribute("href", lineUrl);
       }
 
-      updateLineLinkUi();
-
-      if (location.hash === "#line-linked" || location.hash === "#line-linked-no-friend") {
-        const linkedUser = loadLinkedLineUser();
-        applyLineNameToForm(form, linkedUser, { force: true });
-        if (needsLineFriendAdd(linkedUser)) {
-          setLineLinkMessage(
-            "LINE連携済み：" + ((linkedUser || {}).display_name || "ユーザー") +
-            " さん。友だち一覧に Hiro Coffee がありません。下のボタンから友だち追加してください。",
-            true
-          );
-          setLineFriendAddVisible(true);
-          setLineFriendCheckVisible(true);
-        } else {
-          setLineLinkMessage(
-            "LINE連携済み：" + ((linkedUser || {}).display_name || "ユーザー") +
-            " さん。Hiro Coffee 公式アカウントと友だち連携済みです。",
-            true
-          );
-          setLineFriendAddVisible(false);
-          setLineFriendCheckVisible(false);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState !== "visible" || !pendingFriendCheck) return;
+        const user = loadLinkedLineUser();
+        if (!user || !needsLineFriendAdd(user)) {
+          pendingFriendCheck = false;
+          return;
         }
-        if (lineLoginBtn) lineLoginBtn.hidden = true;
+        pendingFriendCheck = false;
+        checkLineFriendship();
+      });
+
+      let lineLinkBootError = false;
+      if (location.hash === "#line-linked" || location.hash === "#line-linked-no-friend") {
+        applyLineNameToForm(form, loadLinkedLineUser(), { force: true });
         history.replaceState(null, "", location.pathname + location.search);
         window.scrollTo(0, 0);
       } else if (location.hash === "#line-error") {
-        setLineLinkMessage(
-          "LINE連携に失敗しました。Safari で開き直して、もう一度お試しください。",
-          false
-        );
-        if (lineLoginBtn) lineLoginBtn.hidden = false;
-        setLineFriendAddVisible(true);
-        setLineFriendCheckVisible(false);
+        lineLinkBootError = true;
         history.replaceState(null, "", location.pathname + location.search);
         window.scrollTo(0, 0);
       }
+
+      updateLineLinkUi({ lineError: lineLinkBootError });
 
       if (location.hash === "#reserve") {
         history.replaceState(null, "", location.pathname + location.search);
