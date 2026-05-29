@@ -15,7 +15,7 @@
   <title>Hiro Coffee - 京都の楽しいコーヒー時間</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.106.2/dist/umd/supabase.min.js"></script>
-  <script src="config.js?v=1.3.1"></script>
+  <script src="config.js?v=1.3.2"></script>
   <script src="site-env.js"></script>
   <script src="menu-prices.js"></script>
   <script src="demo-store.js"></script>
@@ -146,7 +146,7 @@
           <button type="button" class="btn btn-line" id="lineLoginBtn">LINEと連携する（通知用）</button>
           <a class="btn btn-line line-add-btn" id="lineAddBtn" href="#" target="_blank" rel="noopener noreferrer" hidden>Hiro Coffee を友だち追加</a>
           <button type="button" class="line-link-check-hint" id="lineFriendCheckBtn" hidden>友だち追加済みの方はこちら</button>
-          <p class="line-link-note" id="lineLinkNote">ログイン後に表示される「友だち追加」画面もタップしてください。通知は公式アカウントから届きます。</p>
+          <p class="line-link-note" id="lineLinkNote">連携後、友だち追加画面が自動で開きます。「追加」をタップしてください。通知は公式アカウントから届きます。</p>
           <div id="lineLinkStatus" class="line-link-status" role="status" aria-live="polite">
             <span class="line-link-status__icon" aria-hidden="true"></span>
             <p id="lineLinkStatusText" class="line-link-status__text"></p>
@@ -860,6 +860,7 @@
       const storagePrefix = cfg.STORAGE_PREFIX || "hiro";
       const LINE_USER_KEY = storagePrefix + "-line-user";
       const LINE_STATE_KEY = storagePrefix + "-line-oauth-state";
+      const LINE_PENDING_FRIEND_KEY = storagePrefix + "-line-pending-friend";
       const lineUrl = cfg.LINE_ADD_URL || "#";
       document.querySelectorAll("#lineAddBtn").forEach((a) => {
         a.setAttribute("href", lineUrl);
@@ -948,6 +949,14 @@
 
       let pendingFriendCheck = false;
 
+      function openLineFriendAdd() {
+        if (!lineUrl || lineUrl === "#") return false;
+        pendingFriendCheck = true;
+        setLineStore(LINE_PENDING_FRIEND_KEY, "1");
+        window.location.href = lineUrl;
+        return true;
+      }
+
       function saveLinkedLineUser(user) {
         if (!user || !user.line_user_id) return;
         setLineStore(LINE_USER_KEY, JSON.stringify(user));
@@ -985,6 +994,9 @@
 
           user.is_friend = !!data.is_friend;
           saveLinkedLineUser(user);
+          if (user.is_friend) {
+            removeLineStore(LINE_PENDING_FRIEND_KEY);
+          }
           updateLineLinkUi();
 
           if (user.is_friend) {
@@ -1083,6 +1095,7 @@
       }
       if (lineAddBtn) {
         lineAddBtn.addEventListener("click", () => {
+          setLineStore(LINE_PENDING_FRIEND_KEY, "1");
           pendingFriendCheck = true;
         });
       }
@@ -1098,18 +1111,44 @@
         const user = loadLinkedLineUser();
         if (!user || !needsLineFriendAdd(user)) {
           pendingFriendCheck = false;
+          removeLineStore(LINE_PENDING_FRIEND_KEY);
           return;
         }
         pendingFriendCheck = false;
         checkLineFriendship();
       });
 
+      window.addEventListener("pageshow", () => {
+        if (!getLineStore(LINE_PENDING_FRIEND_KEY)) return;
+        const user = loadLinkedLineUser();
+        if (!user || !needsLineFriendAdd(user)) {
+          removeLineStore(LINE_PENDING_FRIEND_KEY);
+          return;
+        }
+        pendingFriendCheck = true;
+        checkLineFriendship();
+      });
+
       let lineLinkBootError = false;
-      if (location.hash === "#line-linked" || location.hash === "#line-linked-no-friend") {
+      let lineAutoAddAfterLink = false;
+      let lineCheckFriendAfterLink = false;
+      const bootHash = location.hash;
+      if (
+        bootHash === "#line-linked" ||
+        bootHash === "#line-linked-no-friend" ||
+        bootHash === "#line-auto-add" ||
+        bootHash === "#line-check-friend"
+      ) {
         applyLineNameToForm(form, loadLinkedLineUser(), { force: true });
         history.replaceState(null, "", location.pathname + location.search);
         window.scrollTo(0, 0);
-      } else if (location.hash === "#line-error") {
+        if (bootHash === "#line-auto-add" || bootHash === "#line-linked-no-friend") {
+          lineAutoAddAfterLink = true;
+        }
+        if (bootHash === "#line-check-friend") {
+          lineCheckFriendAfterLink = true;
+        }
+      } else if (bootHash === "#line-error") {
         lineLinkBootError = true;
         history.replaceState(null, "", location.pathname + location.search);
         window.scrollTo(0, 0);
@@ -1163,6 +1202,19 @@
           "[Hiro Coffee] Supabase 未設定のためデモモードで動作します。" +
           "予約データはこのブラウザの localStorage に保存されます。"
         );
+      }
+
+      if (lineCheckFriendAfterLink) {
+        pendingFriendCheck = true;
+        checkLineFriendship();
+      } else if (lineAutoAddAfterLink && needsLineFriendAdd(loadLinkedLineUser())) {
+        openLineFriendAdd();
+      } else if (
+        getLineStore(LINE_PENDING_FRIEND_KEY) &&
+        needsLineFriendAdd(loadLinkedLineUser())
+      ) {
+        pendingFriendCheck = true;
+        checkLineFriendship();
       }
 
       async function insertReservation(cfg, client, payload) {

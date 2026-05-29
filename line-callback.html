@@ -2,9 +2,9 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>LINE連携中 - Hiro Coffee</title>
-  <script src="config.js?v=1.3.1"></script>
+  <script src="config.js?v=1.3.2"></script>
   <script src="site-env.js"></script>
   <style>
     body {
@@ -12,21 +12,54 @@
       display: grid;
       place-items: center;
       min-height: 100vh;
+      min-height: 100dvh;
       margin: 0;
+      padding: 24px max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
       background: #fbf5ec;
       color: #3f2f1e;
+    }
+    main {
+      width: min(100%, 360px);
+      display: grid;
+      gap: 16px;
+      text-align: center;
+    }
+    #status {
+      margin: 0;
+      line-height: 1.7;
+    }
+    .friend-add-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: #06c755;
+      color: #fff;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 8px 20px rgba(6, 199, 85, 0.28);
+    }
+    .friend-add-btn[hidden] {
+      display: none !important;
     }
   </style>
 </head>
 <body>
-  <p id="status">LINE連携中です…</p>
+  <main>
+    <p id="status">LINE連携中です…</p>
+    <a id="friendAddBtn" class="friend-add-btn" hidden>Hiro Coffee を友だち追加</a>
+  </main>
   <script>
     (async () => {
       const cfg = window.HIRO_CONFIG || {};
       const storagePrefix = cfg.STORAGE_PREFIX || "hiro";
       const LINE_USER_KEY = storagePrefix + "-line-user";
       const LINE_STATE_KEY = storagePrefix + "-line-oauth-state";
+      const LINE_PENDING_FRIEND_KEY = storagePrefix + "-line-pending-friend";
       const statusEl = document.getElementById("status");
+      const friendAddBtn = document.getElementById("friendAddBtn");
 
       function setLineStore(key, value) {
         sessionStorage.setItem(key, value);
@@ -42,14 +75,50 @@
         localStorage.removeItem(key);
       }
 
+      function goBack(path) {
+        location.replace(new URL(path, location.href).href);
+      }
+
+      function getLineAddUrl() {
+        const addUrl = String(cfg.LINE_ADD_URL || "").trim();
+        return addUrl.indexOf("http") === 0 ? addUrl : "";
+      }
+
+      function openLineFriendAdd() {
+        const addUrl = getLineAddUrl();
+        if (!addUrl) return false;
+
+        setLineStore(LINE_PENDING_FRIEND_KEY, "1");
+        if (friendAddBtn) {
+          friendAddBtn.href = addUrl;
+        }
+        if (statusEl) {
+          statusEl.textContent = "友だち追加画面を開いています…";
+        }
+
+        window.setTimeout(() => {
+          if (document.visibilityState !== "visible") return;
+          if (statusEl) {
+            statusEl.textContent =
+              "自動で開かない場合は、下のボタンをタップして友だち追加してください。";
+          }
+          if (friendAddBtn) friendAddBtn.hidden = false;
+        }, 1200);
+
+        location.replace(addUrl);
+        return true;
+      }
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState !== "visible") return;
+        if (!getLineStore(LINE_PENDING_FRIEND_KEY)) return;
+        goBack("index.html#line-check-friend");
+      });
+
       const params = new URLSearchParams(location.search);
       const code = params.get("code");
       const state = params.get("state");
       const oauthError = params.get("error");
-
-      function goBack(path) {
-        location.replace(new URL(path, location.href).href);
-      }
 
       if (oauthError) {
         removeLineStore(LINE_STATE_KEY);
@@ -91,7 +160,16 @@
           display_name: data.display_name || "",
           is_friend: !!data.is_friend,
         }));
-        goBack(data.is_friend ? "index.html#line-linked" : "index.html#line-linked-no-friend");
+
+        if (data.is_friend) {
+          removeLineStore(LINE_PENDING_FRIEND_KEY);
+          goBack("index.html#line-linked");
+          return;
+        }
+
+        if (openLineFriendAdd()) return;
+
+        goBack("index.html#line-auto-add");
       } catch (err) {
         console.error(err);
         if (statusEl) {
