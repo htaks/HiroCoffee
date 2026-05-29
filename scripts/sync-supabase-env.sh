@@ -39,6 +39,15 @@ db_region_for() {
 db_push_for() {
   local project_ref="$1"
   local db_password="$2"
+
+  if [ -n "${SUPABASE_DB_URL:-}" ]; then
+    local url
+    url="$(trim "$SUPABASE_DB_URL")"
+    echo ">> db push via SUPABASE_DB_URL secret"
+    supabase db push --db-url "$url"
+    return 0
+  fi
+
   local region encoded url
   region="$(db_region_for "$project_ref")"
   encoded=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$db_password")
