@@ -46,6 +46,16 @@ db_url_for() {
   echo "postgresql://postgres.${project_ref}:${encoded}@aws-0-${region}.pooler.supabase.com:5432/postgres"
 }
 
+write_config() {
+  local project_ref="$1"
+  cat > supabase/config.toml <<EOF
+project_id = "${project_ref}"
+
+[db]
+major_version = 15
+EOF
+}
+
 sync_one() {
   local label="$1"
   local project_ref="$2"
@@ -58,6 +68,8 @@ sync_one() {
 
   echo ""
   echo "========== Supabase sync: $label ($project_ref) =========="
+
+  write_config "$project_ref"
 
   export SUPABASE_ACCESS_TOKEN
 
