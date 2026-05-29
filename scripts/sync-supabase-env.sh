@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
-# Sync migrations and Edge Functions to production + staging Supabase projects.
+# Sync migrations and Edge Functions to one Supabase project.
+# Usage: sync-supabase-env.sh [production|staging]
 set -euo pipefail
+
+TARGET="${1:-all}"
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -40,6 +43,9 @@ sync_one() {
   export SUPABASE_PROJECT_ID="$project_ref"
   export SUPABASE_DB_PASSWORD="$db_password"
 
+  echo ">> supabase login (access token)"
+  supabase login --token "$SUPABASE_ACCESS_TOKEN"
+
   echo ">> supabase link"
   if ! supabase link --project-ref "$project_ref" --password "$db_password"; then
     echo "ERROR: supabase link failed for $label ($project_ref)" >&2
@@ -71,21 +77,34 @@ sync_one() {
 }
 
 echo "Supabase CLI: $(supabase --version)"
+echo "Target: $TARGET"
 
 require_var SUPABASE_ACCESS_TOKEN
 export SUPABASE_ACCESS_TOKEN
 
-echo ">> supabase login (access token)"
-supabase login --token "$SUPABASE_ACCESS_TOKEN"
-
-require_var SUPABASE_PROJECT_REF_PRODUCTION
-require_var SUPABASE_DB_PASSWORD_PRODUCTION
-
-sync_one "production" "$SUPABASE_PROJECT_REF_PRODUCTION" "$SUPABASE_DB_PASSWORD_PRODUCTION"
-
-if [ -n "${SUPABASE_PROJECT_REF_STAGING:-}" ] && [ -n "${SUPABASE_DB_PASSWORD_STAGING:-}" ]; then
-  sync_one "staging" "$SUPABASE_PROJECT_REF_STAGING" "$SUPABASE_DB_PASSWORD_STAGING"
-else
-  echo ""
-  echo "SKIP staging: set SUPABASE_PROJECT_REF_STAGING and SUPABASE_DB_PASSWORD_STAGING to enable."
-fi
+case "$TARGET" in
+  production)
+    require_var SUPABASE_PROJECT_REF_PRODUCTION
+    require_var SUPABASE_DB_PASSWORD_PRODUCTION
+    sync_one "production" "$SUPABASE_PROJECT_REF_PRODUCTION" "$SUPABASE_DB_PASSWORD_PRODUCTION"
+    ;;
+  staging)
+    require_var SUPABASE_PROJECT_REF_STAGING
+    require_var SUPABASE_DB_PASSWORD_STAGING
+    sync_one "staging" "$SUPABASE_PROJECT_REF_STAGING" "$SUPABASE_DB_PASSWORD_STAGING"
+    ;;
+  all)
+    require_var SUPABASE_PROJECT_REF_PRODUCTION
+    require_var SUPABASE_DB_PASSWORD_PRODUCTION
+    sync_one "production" "$SUPABASE_PROJECT_REF_PRODUCTION" "$SUPABASE_DB_PASSWORD_PRODUCTION"
+    if [ -n "${SUPABASE_PROJECT_REF_STAGING:-}" ] && [ -n "${SUPABASE_DB_PASSWORD_STAGING:-}" ]; then
+      sync_one "staging" "$SUPABASE_PROJECT_REF_STAGING" "$SUPABASE_DB_PASSWORD_STAGING"
+    else
+      echo "SKIP staging: set SUPABASE_PROJECT_REF_STAGING and SUPABASE_DB_PASSWORD_STAGING."
+    fi
+    ;;
+  *)
+    echo "Unknown target: $TARGET (use production, staging, or all)" >&2
+    exit 1
+    ;;
+esac
