@@ -28,6 +28,14 @@ require_var() {
   fi
 }
 
+db_url_for() {
+  local project_ref="$1"
+  local db_password="$2"
+  local encoded
+  encoded=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$db_password")
+  echo "postgresql://postgres:${encoded}@db.${project_ref}.supabase.co:5432/postgres"
+}
+
 sync_one() {
   local label="$1"
   local project_ref="$2"
@@ -35,26 +43,19 @@ sync_one() {
 
   db_password="$(trim "$db_password")"
   project_ref="$(trim "$project_ref")"
+  local db_url
+  db_url="$(db_url_for "$project_ref" "$db_password")"
 
   echo ""
   echo "========== Supabase sync: $label ($project_ref) =========="
 
   export SUPABASE_ACCESS_TOKEN
-  export SUPABASE_PROJECT_ID="$project_ref"
-  export SUPABASE_DB_PASSWORD="$db_password"
 
   echo ">> supabase login (access token)"
   supabase login --token "$SUPABASE_ACCESS_TOKEN"
 
-  echo ">> supabase link"
-  if ! supabase link --project-ref "$project_ref" --password "$db_password"; then
-    echo "ERROR: supabase link failed for $label ($project_ref)" >&2
-    echo "Hint: verify GitHub Secret database password matches Supabase Dashboard." >&2
-    exit 1
-  fi
-
-  echo ">> db push"
-  supabase db push
+  echo ">> db push (direct db-url, skip supabase link)"
+  supabase db push --db-url "$db_url"
 
   echo ">> deploy Edge Functions"
   for fn in "${FUNCTIONS[@]}"; do
