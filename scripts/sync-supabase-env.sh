@@ -41,7 +41,11 @@ sync_one() {
   export SUPABASE_DB_PASSWORD="$db_password"
 
   echo ">> supabase link"
-  supabase link --project-ref "$project_ref" --password "$db_password"
+  if ! supabase link --project-ref "$project_ref" --password "$db_password"; then
+    echo "ERROR: supabase link failed for $label ($project_ref)" >&2
+    echo "Hint: verify GitHub Secret database password matches Supabase Dashboard." >&2
+    exit 1
+  fi
 
   echo ">> db push"
   supabase db push
@@ -70,6 +74,9 @@ echo "Supabase CLI: $(supabase --version)"
 
 require_var SUPABASE_ACCESS_TOKEN
 export SUPABASE_ACCESS_TOKEN
+
+echo ">> supabase login (access token)"
+supabase login --token "$SUPABASE_ACCESS_TOKEN"
 
 require_var SUPABASE_PROJECT_REF_PRODUCTION
 require_var SUPABASE_DB_PASSWORD_PRODUCTION
