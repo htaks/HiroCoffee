@@ -28,12 +28,22 @@ require_var() {
   fi
 }
 
+db_region_for() {
+  case "$1" in
+    ytyllufahvcrmirxhlaf) echo "ap-northeast-1" ;;
+    zvatauolaadkvyspenfm) echo "ap-southeast-1" ;;
+    *) echo "ap-northeast-1" ;;
+  esac
+}
+
 db_url_for() {
   local project_ref="$1"
   local db_password="$2"
-  local encoded
+  local region encoded
+  region="$(db_region_for "$project_ref")"
   encoded=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$db_password")
-  echo "postgresql://postgres:${encoded}@db.${project_ref}.supabase.co:5432/postgres"
+  # Session pooler (IPv4 friendly for GitHub Actions)
+  echo "postgresql://postgres.${project_ref}:${encoded}@aws-0-${region}.pooler.supabase.com:5432/postgres"
 }
 
 sync_one() {
