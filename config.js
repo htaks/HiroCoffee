@@ -7,7 +7,7 @@
 // ステージング専用 Supabase を用意したら STAGING の URL / KEY を差し替えてください。
 
 (function () {
-  const SITE_VERSION = "1.2.14";
+  const SITE_VERSION = "1.2.15";
 
   const shared = {
     LINE_ADD_URL: "https://line.me/R/ti/p/@409azrvy",
@@ -22,8 +22,7 @@
     SITE_LABEL: "",
     STORAGE_PREFIX: "hiro",
     SUPABASE_URL: "https://ytyllufahvcrmirxhlaf.supabase.co",
-    SUPABASE_ANON_KEY:
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0eWxsdWZhaHZjcm1pcnhobGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5NzIwNDIsImV4cCI6MjA5NTU0ODA0Mn0.1LdvRLxI8bfdIh3uu86D7yvb6NlLdVepQLCnlo1rHB8",
+    SUPABASE_ANON_KEY: "sb_publishable__tMsPJNPtQbenPLYF2xi_g_L6JpGxYT",
     USES_PRODUCTION_DATABASE: false,
   };
 
@@ -34,8 +33,7 @@
     STORAGE_PREFIX: "hiro-stg",
     // TODO: ステージング専用 Supabase プロジェクト作成後に差し替え
     SUPABASE_URL: "https://ytyllufahvcrmirxhlaf.supabase.co",
-    SUPABASE_ANON_KEY:
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0eWxsdWZhaHZjcm1pcnhobGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk5NzIwNDIsImV4cCI6MjA5NTU0ODA0Mn0.1LdvRLxI8bfdIh3uu86D7yvb6NlLdVepQLCnlo1rHB8",
+    SUPABASE_ANON_KEY: "sb_publishable__tMsPJNPtQbenPLYF2xi_g_L6JpGxYT",
     USES_PRODUCTION_DATABASE: true,
   };
 
